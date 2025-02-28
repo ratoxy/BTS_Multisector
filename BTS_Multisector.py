@@ -1,7 +1,7 @@
 import folium
 import numpy as np
 import streamlit as st
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, box
 import string
 
 def gerar_celula(lat, lon, azimute, alcance, abertura=120):
@@ -14,16 +14,40 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
     pontos.append((lat, lon))
     return pontos
 
+def gerar_grelha(area_coberta, espaco=0.0045):
+    min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
+    linhas = []
+    etiquetas = []
+    letras = string.ascii_uppercase
+    
+    lon_range = np.arange(min_lon, max_lon, espaco)
+    lat_range = np.arange(max_lat, min_lat, -espaco)
+    
+    for lon in lon_range:
+        linhas.append([(min_lat, lon), (max_lat, lon)])
+    for lat in lat_range:
+        linhas.append([(lat, min_lon), (lat, max_lon)])
+
+    perimetro = [
+        (min_lat, min_lon), (min_lat, max_lon),
+        (max_lat, max_lon), (max_lat, min_lon),
+        (min_lat, min_lon)
+    ]
+
+    for row_index, lat in enumerate(lat_range[:-1]):
+        for col_index, lon in enumerate(lon_range[:-1]):
+            etiqueta = f"{letras[col_index % len(letras)]}{row_index + 1}"
+            etiquetas.append(((lat - espaco / 2, lon + espaco / 2), etiqueta))
+    
+    return linhas, etiquetas, perimetro
+
 def main():
     st.set_page_config(layout="wide")
 
-    # CSS para ajustar dinamicamente a largura do mapa quando a sidebar está aberta ou fechada
     st.markdown(
         """
         <style>
-        [data-testid="stSidebar"] {
-            transition: width 0.3s ease-in-out;
-        }
+        [data-testid="stSidebar"] { transition: width 0.3s ease-in-out; }
         iframe {
             position: fixed;
             top: 0;
@@ -34,9 +58,7 @@ def main():
             transition: width 0.3s ease-in-out;
         }
         @media (max-width: 768px) {
-            iframe {
-                width: 100%;
-            }
+            iframe { width: 100%; }
         }
         </style>
         """,
@@ -47,11 +69,8 @@ def main():
     st.markdown(":blue[**_©2025 NAIIC CTer Santarém_**]")
 
     cores = ["blue", "red", "green"]
-    
-    lat_default = 39.2369
-    lon_default = -8.6807
-    azimute_default = 40
-    alcance_default = 3.0
+
+    lat_default, lon_default, azimute_default, alcance_default = 39.2369, -8.6807, 40, 3.0
 
     col1, col2 = st.sidebar.columns(2)
     with col1:
@@ -59,8 +78,11 @@ def main():
     with col2:
         alcance = st.number_input("Alcance (km)", value=alcance_default, format="%.1f", step=0.1)
 
+    mostrar_grelha = st.sidebar.checkbox("Mostrar Grelha", value=False)
+
     st.sidebar.markdown("### Configuração das Células")
     celulas = []
+    area_coberta = None
 
     for i in range(3):
         ativo = st.sidebar.checkbox(f"Célula {i+1}", value=(i == 0))
@@ -75,6 +97,9 @@ def main():
 
             celulas.append((lat, lon, azimute, cores[i]))
 
+            poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
+            area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
+
     tiles = "CartoDB positron" if mapa_tipo == "Padrão" else "Esri WorldImagery"
     mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles)
 
@@ -88,6 +113,17 @@ def main():
             fill_color=cor,
             fill_opacity=0.3
         ).add_to(mapa)
+
+    if mostrar_grelha and area_coberta is not None:
+        grelha, etiquetas, perimetro = gerar_grelha(area_coberta)
+        for linha in grelha:
+            folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)
+        for (pos, label) in etiquetas:
+            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
+        folium.PolyLine(perimetro, color="orange", weight=4, opacity=1).add_to(mapa)
+
+    if area_coberta is not None:
+        mapa.fit_bounds(area_coberta.bounds)
 
     st.components.v1.html(mapa._repr_html_(), height=0, scrolling=False)
 
