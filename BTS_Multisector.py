@@ -26,8 +26,8 @@ def gerar_grelha(area_coberta, espaco=0.0045):
     etiquetas = []
     letras = string.ascii_uppercase
     
-    lon_range = np.arange(min_lon, max_lon + espaco, espaco)
-    lat_range = np.arange(max_lat, min_lat - espaco, -espaco)  # Invertendo para iniciar no canto superior esquerdo
+    lon_range = np.arange(min_lon, max_lon, espaco)
+    lat_range = np.arange(max_lat, min_lat, -espaco)  # Invertendo para iniciar no canto superior esquerdo
     
     for lon in lon_range:
         linhas.append([(min_lat, lon), (max_lat, lon)])
@@ -40,8 +40,8 @@ def gerar_grelha(area_coberta, espaco=0.0045):
         (min_lat, min_lon)
     ]
     
-    for row_index, lat in enumerate(lat_range):
-        for col_index, lon in enumerate(lon_range):
+    for row_index, lat in enumerate(lat_range[:-1]):  # Evitar etiquetas fora dos limites
+        for col_index, lon in enumerate(lon_range[:-1]):
             etiqueta = f"{letras[col_index % len(letras)]}{row_index + 1}"
             etiquetas.append(((lat - espaco / 2, lon + espaco / 2), etiqueta))
     
