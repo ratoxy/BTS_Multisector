@@ -1,5 +1,7 @@
 folium
 streamlit-folium
+streamlit_folium
+st_folium
 streamlit
 shapely
 geopandas
