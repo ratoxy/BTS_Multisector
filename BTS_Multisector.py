@@ -16,10 +16,17 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120, pontos=40):
     pontos_lista.append((lat, lon))  # Fechar a célula
     return pontos_lista
 
+def col_label(n):
+    """Gera rótulos de coluna estilo Excel (A, B, ..., Z, AA, AB, ...)."""
+    label = ""
+    while n >= 0:
+        label = chr(n % 26 + ord('A')) + label
+        n = n // 26 - 1
+    return label
+
 def gerar_grelha(area_coberta, espaco=0.0045):
-    """Gera a grade fixa de 500m x 500m."""
+    """Gera a grade fixa de 500m x 500m com rótulos contínuos."""
     min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
-    letras = string.ascii_uppercase
     
     linhas, etiquetas = [], []
     lon_range = np.arange(min_lon, max_lon + espaco, espaco)
@@ -32,7 +39,7 @@ def gerar_grelha(area_coberta, espaco=0.0045):
     
     for row_index, lat in enumerate(lat_range[:-1]):  
         for col_index, lon in enumerate(lon_range[:-1]):
-            etiqueta = f"{letras[col_index % len(letras)]}{row_index + 1}"
+            etiqueta = f"{col_label(col_index)}{row_index + 1}"
             etiquetas.append(((lat - espaco / 2, lon + espaco / 2), etiqueta))
     
     perimetro = [
