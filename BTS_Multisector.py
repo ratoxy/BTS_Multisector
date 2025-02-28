@@ -58,30 +58,32 @@ def main():
     alcance_default = 3
     tamanho_quadricula_default = 500
 
-    # Controles na barra lateral
-    mapa_tipo = st.sidebar.selectbox("Tipo de mapa", ["Padrão", "Satélite", "OpenStreetMap"])
-    mostrar_grelha = st.sidebar.toggle("Mostrar Grelha")
-    tamanho_quadricula = st.sidebar.slider("Tamanho da Quadricula (m)", 0, 1000, tamanho_quadricula_default, step=50)
-    cor_grelha = st.sidebar.color_picker("Cor da Grelha e Rótulos", "#FFA500")
+    # Layout da barra lateral ajustado conforme sua preferência
+    with st.sidebar.expander("Configuração Geral", expanded=True):
+        mapa_tipo = st.selectbox("Tipo de mapa", ["Padrão", "Satélite", "OpenStreetMap"])
+        mostrar_grelha = st.toggle("Mostrar Grelha")
+        tamanho_quadricula = st.slider("Tamanho da Quadricula (m)", 0, 1000, tamanho_quadricula_default, step=50)
+        cor_grelha = st.color_picker("Cor da Grelha e Rótulos", "#FFA500")
     
-    st.sidebar.markdown("### Configuração das Células")
-    alcance = st.sidebar.slider("Alcance Geral (km)", 1, 20, alcance_default)
+    with st.sidebar.expander("Configuração das Células", expanded=True):
+        alcance = st.slider("Alcance Geral (km)", 1, 20, alcance_default)
     
     celulas = []
     area_coberta = None
 
     for i in range(3):
-        ativo = st.sidebar.checkbox(f"Ativar Célula {i+1}", value=(i == 0))
-        if ativo:
-            col1, col2 = st.sidebar.columns(2)
-            with col1:
-                lat = st.number_input(f"Lat {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
-            with col2:
-                lon = st.number_input(f"Lon {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
-            azimute = st.sidebar.slider(f"Azimute {i+1}", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
-            celulas.append((lat, lon, azimute, cores[i]))
-            poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
-            area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
+        with st.sidebar.expander(f"Célula {i+1}", expanded=(i == 0)):
+            ativo = st.checkbox(f"Ativar Célula {i+1}", value=(i == 0))
+            if ativo:
+                col1, col2 = st.columns(2)
+                with col1:
+                    lat = st.number_input(f"Lat {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
+                with col2:
+                    lon = st.number_input(f"Lon {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
+                azimute = st.slider(f"Azimute {i+1}", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
+                celulas.append((lat, lon, azimute, cores[i]))
+                poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
+                area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
 
     tiles_dict = {"Padrão": "CartoDB positron", "Satélite": "Esri WorldImagery", "OpenStreetMap": "OpenStreetMap"}
     mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo])
@@ -98,7 +100,7 @@ def main():
         ).add_to(mapa)
 
     if mostrar_grelha and area_coberta is not None:
-        espaco = tamanho_quadricula / 111000  # Converter metros para graus
+        espaco = tamanho_quadricula / 111000
         grelha, etiquetas, perimetro = gerar_grelha(area_coberta, espaco)
         for linha in grelha:
             folium.PolyLine(linha, color=cor_grelha, weight=2, opacity=0.9).add_to(mapa)
@@ -111,17 +113,9 @@ def main():
 
     folium.LayerControl().add_to(mapa)
     
-    # Ajuste correto para ocupar a tela inteira no desktop e mobile
     st.markdown(
         """
         <style>
-            [data-testid="stSidebar"] {
-                width: 300px !important;
-            }
-            .main .block-container {
-                padding-top: 0px;
-                padding-bottom: 0px;
-            }
             iframe {
                 width: 100% !important;
                 height: calc(100vh - 20px) !important;
@@ -136,7 +130,8 @@ def main():
         unsafe_allow_html=True
     )
 
-    folium_static(mapa, width=800, height=600)  # O tamanho real será ajustado pelo CSS
+    folium_static(mapa, width=800, height=600)
 
 if __name__ == "__main__":
     main()
+
