@@ -25,8 +25,8 @@ def gerar_grelha(area_coberta, espaco=None):
         espaco = (max_lat - min_lat) / 10  # Ajuste automático do espaçamento
     
     linhas, etiquetas = [], []
-    lon_range = np.arange(min_lon, max_lon, espaco)
-    lat_range = np.arange(max_lat, min_lat, -espaco)
+    lon_range = np.arange(min_lon, max_lon + espaco, espaco)
+    lat_range = np.arange(max_lat, min_lat - espaco, -espaco)
     
     for lon in lon_range:
         linhas.append([(min_lat, lon), (max_lat, lon)])
@@ -87,7 +87,7 @@ def main():
                 poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
                 area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
     
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles)
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles, width="100%", height="90vh")
     
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
