@@ -11,7 +11,7 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
         dlat = (alcance / 111) * np.cos(angulo_rad)
         dlon = (alcance / (111 * np.cos(np.radians(lat)))) * np.sin(angulo_rad)
         pontos.append((lat + dlat, lon + dlon))
-    pontos.append((lat, lon))  # Fechar a célula
+    pontos.append((lat, lon))
     return pontos
 
 def gerar_grelha(area_coberta, espaco=0.0045):
@@ -28,11 +28,7 @@ def gerar_grelha(area_coberta, espaco=0.0045):
     for lat in lat_range:
         linhas.append([(lat, min_lon), (lat, max_lon)])
 
-    perimetro = [
-        (min_lat, min_lon), (min_lat, max_lon),
-        (max_lat, max_lon), (max_lat, min_lon),
-        (min_lat, min_lon)
-    ]
+    perimetro = [(min_lat, min_lon), (min_lat, max_lon), (max_lat, max_lon), (max_lat, min_lon), (min_lat, min_lon)]
     
     for row_index, lat in enumerate(lat_range[:-1]):  
         for col_index, lon in enumerate(lon_range[:-1]):
@@ -53,9 +49,13 @@ def main():
     azimute_default = 40
     alcance_default = 3.0
 
-    # Controles na barra lateral
-    mapa_tipo = st.sidebar.selectbox("Tipo de mapa", ["Padrão", "Satélite", "Híbrido"])
-    alcance = st.sidebar.number_input("Alcance Geral (km)", value=alcance_default, format="%.1f", step=0.1)
+    # Controles otimizados
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        mapa_tipo = st.selectbox("Tipo de mapa", ["Padrão", "Satélite", "Híbrido"])
+    with col2:
+        alcance = st.number_input("Alcance (km)", value=alcance_default, format="%.1f", step=0.1)
+    
     mostrar_grelha = st.sidebar.checkbox("Mostrar Grelha", value=False)
 
     st.sidebar.markdown("### Configuração das Células")
@@ -63,17 +63,17 @@ def main():
     area_coberta = None
 
     for i in range(3):
-        ativo = st.sidebar.checkbox(f"Ativar Célula {i+1}", value=(i == 0))
+        ativo = st.sidebar.checkbox(f"Célula {i+1}", value=(i == 0))
         if ativo:
-            col1, col2 = st.sidebar.columns(2)
+            col1, col2, col3 = st.sidebar.columns([1, 1, 1])
             with col1:
                 lat = st.number_input(f"Lat {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
             with col2:
                 lon = st.number_input(f"Lon {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
-            
-            azimute = st.sidebar.slider(f"Azimute {i+1}", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
-            celulas.append((lat, lon, azimute, cores[i]))
+            with col3:
+                azimute = st.slider(f"Az {i+1}", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
 
+            celulas.append((lat, lon, azimute, cores[i]))
             poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
             area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
 
