@@ -67,7 +67,7 @@ def main():
     with col_grelha:
         mostrar_grelha = st.checkbox("Mostrar Grelha", value=False)
     
-    st.markdown("### Configuração das Células")
+    st.markdown("Configuração das Células")
     colunas = st.columns(3)
     celulas = []
     area_coberta = None
@@ -87,7 +87,7 @@ def main():
                 area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
     
     tiles = "CartoDB positron" if mapa_tipo == "Padrão" else "Esri WorldImagery"
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=12, tiles=tiles)
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles)
     
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
