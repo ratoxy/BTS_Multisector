@@ -87,7 +87,7 @@ def main():
                 poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
                 area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
     
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles, width="100%", height="90vh")
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles)
     
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
@@ -114,7 +114,9 @@ def main():
         ).add_to(mapa)
     
     folium.LayerControl().add_to(mapa)
-    folium_static(mapa, height=900)
+    
+    st.markdown("<style>.stApp { height: 100vh; }</style>", unsafe_allow_html=True)
+    folium_static(mapa, width=1400, height=800)
 
 if __name__ == "__main__":
     main()
