@@ -30,11 +30,8 @@ def gerar_grelha(min_lat, max_lat, min_lon, max_lon, espaco=0.0045):
     
     for lon in lon_range:
         linhas.append([(min_lat, lon), (max_lat, lon)])
-    linhas.append([(min_lat, max_lon + espaco), (max_lat, max_lon + espaco)])
-    
     for lat in lat_range:
         linhas.append([(lat, min_lon), (lat, max_lon)])
-    linhas.append([(min_lat - espaco, min_lon), (min_lat - espaco, max_lon)])
     
     for row_index, lat in enumerate(lat_range, start=1):
         for col_index, lon in enumerate(lon_range):
@@ -101,9 +98,9 @@ def main():
     if mostrar_grelha:
         grelha, etiquetas = gerar_grelha(min_lat, max_lat, min_lon, max_lon)
         for linha in grelha:
-            folium.PolyLine(linha, color="gray", weight=1, opacity=0.5).add_to(mapa)
+            folium.PolyLine(linha, color="orange", weight=1, opacity=0.7).add_to(mapa)
         for (pos, label) in etiquetas:
-            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: black;">{label}</div>')).add_to(mapa)
+            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
     
     mapa.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
     
@@ -120,4 +117,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
