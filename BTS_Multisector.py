@@ -59,67 +59,71 @@ def main():
     azimute_default = 40
     alcance_default = 3.0
     
-    col_mapa, col_alcance, col_grelha = st.columns([1, 1, 1])
-    with col_mapa:
-        mapa_tipo = st.selectbox("Tipo de mapa", ["Padrão", "Satélite", "Híbrido"])
-    with col_alcance:
-        alcance = st.number_input("Alcance Geral (km)", value=alcance_default, format="%.1f", step=0.1)
-    with col_grelha:
-        mostrar_grelha = st.checkbox("Mostrar Grelha", value=False)
+    col1, col2 = st.columns([1, 2])  # Campos à esquerda, mapa à direita
     
-    st.markdown("### Configuração das Células")
-    colunas = st.columns(3)
-    celulas = []
-    area_coberta = None
-    for i, col in enumerate(colunas):
-        with col:
-            ativo = st.checkbox(f"Ativar Célula {i+1}", value=(i == 0))
-            if ativo:
-                col_lat, col_lon = st.columns(2)
-                with col_lat:
-                    lat = st.number_input(f"Latitude {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
-                with col_lon:
-                    lon = st.number_input(f"Longitude {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
-                azimute = st.slider(f"Azimute", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
-                celulas.append((lat, lon, azimute, cores[i]))
-                
-                poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
-                area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
+    with col1:
+        col_mapa, col_alcance, col_grelha = st.columns([1, 1, 1])
+        with col_mapa:
+            mapa_tipo = st.selectbox("Tipo de mapa", ["Padrão", "Satélite", "Híbrido"])
+        with col_alcance:
+            alcance = st.number_input("Alcance Geral (km)", value=alcance_default, format="%.1f", step=0.1)
+        with col_grelha:
+            mostrar_grelha = st.checkbox("Mostrar Grelha", value=False)
+        
+        st.markdown("### Configuração das Células")
+        colunas = st.columns(3)
+        celulas = []
+        area_coberta = None
+        for i, col in enumerate(colunas):
+            with col:
+                ativo = st.checkbox(f"Ativar Célula {i+1}", value=(i == 0))
+                if ativo:
+                    col_lat, col_lon = st.columns(2)
+                    with col_lat:
+                        lat = st.number_input(f"Latitude {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
+                    with col_lon:
+                        lon = st.number_input(f"Longitude {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
+                    azimute = st.slider(f"Azimute", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
+                    celulas.append((lat, lon, azimute, cores[i]))
+                    
+                    poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
+                    area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
     
-    tiles = "CartoDB positron" if mapa_tipo == "Padrão" else "Esri WorldImagery"
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=14, tiles=tiles)
-    
-    for lat, lon, azimute, cor in celulas:
-        folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
-        celula_coords = gerar_celula(lat, lon, azimute, alcance)
-        folium.Polygon(
-            locations=celula_coords,
-            color=cor,
-            fill=True,
-            fill_color=cor,
-            fill_opacity=0.3
-        ).add_to(mapa)
-    
-    if mostrar_grelha and area_coberta is not None:
-        grelha, etiquetas, perimetro = gerar_grelha(area_coberta)
-        for linha in grelha:
-            folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)
-        for (pos, label) in etiquetas:
-            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
-        folium.PolyLine(perimetro, color="orange", weight=4, opacity=1).add_to(mapa)  # Contorno mais grosso
-    
-    mapa.fit_bounds(area_coberta.bounds)
-    
-    if mapa_tipo == "Híbrido":
-        folium.TileLayer(
-            tiles="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-            attr="Esri",
-            name="Labels",
-            overlay=True
-        ).add_to(mapa)
-    
-    folium.LayerControl().add_to(mapa)
-    st.components.v1.html(mapa._repr_html_(), height=900)
+    with col2:
+        tiles = "CartoDB positron" if mapa_tipo == "Padrão" else "Esri WorldImagery"
+        mapa = folium.Map(location=[lat_default, lon_default], zoom_start=14, tiles=tiles)
+        
+        for lat, lon, azimute, cor in celulas:
+            folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
+            celula_coords = gerar_celula(lat, lon, azimute, alcance)
+            folium.Polygon(
+                locations=celula_coords,
+                color=cor,
+                fill=True,
+                fill_color=cor,
+                fill_opacity=0.3
+            ).add_to(mapa)
+        
+        if mostrar_grelha and area_coberta is not None:
+            grelha, etiquetas, perimetro = gerar_grelha(area_coberta)
+            for linha in grelha:
+                folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)
+            for (pos, label) in etiquetas:
+                folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
+            folium.PolyLine(perimetro, color="orange", weight=4, opacity=1).add_to(mapa)  # Contorno mais grosso
+        
+        mapa.fit_bounds(area_coberta.bounds)
+        
+        if mapa_tipo == "Híbrido":
+            folium.TileLayer(
+                tiles="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+                attr="Esri",
+                name="Labels",
+                overlay=True
+            ).add_to(mapa)
+        
+        folium.LayerControl().add_to(mapa)
+        st.components.v1.html(mapa._repr_html_(), height=900)
 
 if __name__ == "__main__":
     main()
