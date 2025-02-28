@@ -24,8 +24,8 @@ def col_label(n):
         n = n // 26 - 1
     return label
 
-def gerar_grelha(area_coberta, espaco_m, cor_grelha, cor_rotulo):
-    """Gera a grade fixa com rótulos contínuos e cores personalizáveis."""
+def gerar_grelha(area_coberta, espaco_m, cor_grelha):
+    """Gera a grade fixa com rótulos contínuos e cor personalizável."""
     espaco = espaco_m / 111000  # Converter metros para graus aproximadamente
     min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
     
@@ -49,7 +49,7 @@ def gerar_grelha(area_coberta, espaco_m, cor_grelha, cor_rotulo):
         (min_lat, min_lon)
     ]
     
-    return linhas, etiquetas, perimetro, cor_grelha, cor_rotulo
+    return linhas, etiquetas, perimetro, cor_grelha
 
 def main():
     st.set_page_config(layout="wide")
@@ -60,11 +60,11 @@ def main():
     lat_default, lon_default = 39.2369, -8.6807
     azimute_default, alcance_default = 40, 3.0
     
+    mapa_tipo = st.sidebar.selectbox("Tipo de mapa", ["Padrão", "Satélite", "OSM"])
     alcance = st.sidebar.number_input("Alcance (km)", value=alcance_default, format="%.1f", step=0.1)
     mostrar_grelha = st.sidebar.checkbox("Mostrar Grelha", value=False)
     tamanho_grelha = st.sidebar.number_input("Tamanho Grelha (m)", value=500, step=100, min_value=100)
-    cor_grelha = st.sidebar.color_picker("Cor Grelha", "#FFA500")
-    cor_rotulo = st.sidebar.color_picker("Cor Rótulos", "#FFA500")
+    cor_grelha = st.sidebar.color_picker("Cor Grelha e Rótulos", "#FFA500")
     
     st.sidebar.markdown("### Células")
     celulas = []
@@ -80,10 +80,8 @@ def main():
             poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
             area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
     
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13)
-    folium.TileLayer("CartoDB positron", name="Padrão").add_to(mapa)
-    folium.TileLayer("Esri WorldImagery", name="Satélite").add_to(mapa)
-    folium.TileLayer("OpenStreetMap", name="OSM").add_to(mapa)
+    tiles_dict = {"Padrão": "CartoDB positron", "Satélite": "Esri WorldImagery", "OSM": "OpenStreetMap"}
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo])
     
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
@@ -93,14 +91,13 @@ def main():
         ).add_to(mapa)
     
     if mostrar_grelha and area_coberta is not None:
-        grelha, etiquetas, perimetro, cor_grelha, cor_rotulo = gerar_grelha(area_coberta, tamanho_grelha, cor_grelha, cor_rotulo)
+        grelha, etiquetas, perimetro, cor_grelha = gerar_grelha(area_coberta, tamanho_grelha, cor_grelha)
         for linha in grelha:
             folium.PolyLine(linha, color=cor_grelha, weight=2, opacity=0.9).add_to(mapa)
         for (pos, label) in etiquetas:
-            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: {cor_rotulo};">{label}</div>')).add_to(mapa)
+            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: {cor_grelha};">{label}</div>')).add_to(mapa)
         folium.PolyLine(perimetro, color=cor_grelha, weight=4, opacity=1).add_to(mapa)
     
-    folium.LayerControl().add_to(mapa)
     st.markdown("<style>.stApp { height: 100vh; }</style>", unsafe_allow_html=True)
     folium_static(mapa, width=1400, height=800)
 
