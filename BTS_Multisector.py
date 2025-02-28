@@ -15,13 +15,12 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
     pontos.append((lat, lon))  # Fechar a célula
     return pontos
 
-def gerar_grelha(area_coberta, tamanho_quadricula):
+def gerar_grelha(area_coberta, espaco):
     min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
     linhas = []
     etiquetas = []
     letras = string.ascii_uppercase
     
-    espaco = tamanho_quadricula / 111000  # Converter metros para graus
     lon_range = np.arange(min_lon, max_lon, espaco)
     lat_range = np.arange(max_lat, min_lat, -espaco)
 
@@ -36,16 +35,12 @@ def gerar_grelha(area_coberta, tamanho_quadricula):
         (min_lat, min_lon)
     ]
     
-    def coluna_excel(n):
-        result = ""
-        while n >= 0:
-            result = chr(65 + (n % 26)) + result
-            n = n // 26 - 1
-        return result
-    
     for row_index, lat in enumerate(lat_range[:-1]):  
         for col_index, lon in enumerate(lon_range[:-1]):
-            etiqueta = f"{coluna_excel(col_index)}{row_index + 1}"
+            coluna_label = "".join(
+                letras[(col_index // len(letras)) - 1] if col_index >= len(letras) else "" for i in range((col_index // len(letras)) + 1)
+            ) + letras[col_index % len(letras)]
+            etiqueta = f"{coluna_label}{row_index + 1}"
             etiquetas.append(((lat - espaco / 2, lon + espaco / 2), etiqueta))
     
     return linhas, etiquetas, perimetro
@@ -54,16 +49,24 @@ def main():
     st.set_page_config(layout="wide")
     st.sidebar.title("_Multi Cell View_")
     st.sidebar.markdown(":blue[**_©2025 NAIIC CTer Santarém_**]")
-
-    cores = ["blue", "red", "green"]
-    lat_default, lon_default = 39.2369, -8.6807
-    azimute_default, alcance_default = 40, 3
-
-    # Configuração do mapa
-    mapa_tipo = st.sidebar.selectbox("Tipo de mapa", ["Padrão", "Satélite", "OpenStreetMap"])
     
-    st.sidebar.subheader("Configuração das Células")
+    cores = ["blue", "red", "green"]
+    
+    lat_default = 39.2369
+    lon_default = -8.6807
+    azimute_default = 40
+    alcance_default = 3
+    tamanho_quadricula_default = 500
+
+    # Controles na barra lateral
+    mapa_tipo = st.sidebar.selectbox("Tipo de mapa", ["Padrão", "Satélite", "OpenStreetMap"])
+    mostrar_grelha = st.sidebar.toggle("Mostrar Grelha")
+    tamanho_quadricula = st.sidebar.slider("Tamanho da Quadricula (m)", 0, 1000, tamanho_quadricula_default, step=50)
+    cor_grelha = st.sidebar.color_picker("Cor da Grelha e Rótulos", "#FFA500")
+    
+    st.sidebar.markdown("### Configuração das Células")
     alcance = st.sidebar.slider("Alcance Geral (km)", 1, 20, alcance_default)
+    
     celulas = []
     area_coberta = None
 
@@ -79,13 +82,9 @@ def main():
             celulas.append((lat, lon, azimute, cores[i]))
             poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
             area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
-    
-    mostrar_grelha = st.sidebar.toggle("Mostrar Grelha", value=False)
-    tamanho_quadricula = st.sidebar.slider("Tamanho Quadricula (m)", 0, 1000, 500, 50)
-    cor_grelha = st.sidebar.color_picker("Cor da Grelha e Rótulos", "#FFA500")
-    
-    tiles = {"Padrão": "CartoDB positron", "Satélite": "Esri WorldImagery", "OpenStreetMap": "OpenStreetMap"}[mapa_tipo]
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles)
+
+    tiles_dict = {"Padrão": "CartoDB positron", "Satélite": "Esri WorldImagery", "OpenStreetMap": "OpenStreetMap"}
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo])
 
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
@@ -97,28 +96,23 @@ def main():
             fill_color=cor,
             fill_opacity=0.3
         ).add_to(mapa)
-    
+
     if mostrar_grelha and area_coberta is not None:
-        grelha, etiquetas, perimetro = gerar_grelha(area_coberta, tamanho_quadricula)
+        espaco = tamanho_quadricula / 111000  # Converter metros para graus
+        grelha, etiquetas, perimetro = gerar_grelha(area_coberta, espaco)
         for linha in grelha:
             folium.PolyLine(linha, color=cor_grelha, weight=2, opacity=0.9).add_to(mapa)
         for (pos, label) in etiquetas:
             folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: {cor_grelha};">{label}</div>')).add_to(mapa)
         folium.PolyLine(perimetro, color=cor_grelha, weight=4, opacity=1).add_to(mapa)
-    
+
     if area_coberta:
         mapa.fit_bounds(area_coberta.bounds)
-    
+
     folium.LayerControl().add_to(mapa)
     
-    st.markdown("""
-        <style>
-            [data-testid="stSidebar"] {width: 300px;}
-            iframe {width: 100vw; height: 100vh; border: none;}
-        </style>
-    """, unsafe_allow_html=True)
-    
-    folium_static(mapa, width="100%", height="100vh")
+    st.markdown("<style>iframe {width: 100vw !important; height: 90vh !important;}</style>", unsafe_allow_html=True)
+    folium_static(mapa, width="100%", height="90vh")
 
 if __name__ == "__main__":
     main()
