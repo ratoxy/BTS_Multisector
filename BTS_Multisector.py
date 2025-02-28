@@ -17,9 +17,9 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
     pontos.append((lat, lon))  # Fechar a célula
     return pontos
 
-def gerar_grelha(min_lat, max_lat, min_lon, max_lon, espaco=0.00225):
+def gerar_grelha(min_lat, max_lat, min_lon, max_lon, espaco=0.0045):
     """
-    Gera uma grelha quadriculada de 250 metros sobre a área coberta pelas células, com rótulos alfanuméricos.
+    Gera uma grelha quadriculada de 500 metros sobre a área coberta pelas células, com rótulos alfanuméricos.
     """
     linhas = []
     etiquetas = []
@@ -32,24 +32,24 @@ def gerar_grelha(min_lat, max_lat, min_lon, max_lon, espaco=0.00225):
         lon += espaco
         col_index += 1
     
-    lat = min_lat
+    lat = max_lat  # Iniciar no topo
     row_index = 1
-    while lat <= max_lat:
+    while lat >= min_lat:
         linhas.append([(lat, min_lon), (lat, max_lon)])
-        lat += espaco
+        lat -= espaco
         row_index += 1
     
-    lat = min_lat
+    lat = max_lat  # Iniciar no topo
     row_index = 1
-    while lat <= max_lat:
+    while lat >= min_lat:
         lon = min_lon
         col_index = 0
         while lon <= max_lon:
             etiqueta = f"{letras[col_index % len(letras)]}{row_index}"
-            etiquetas.append(((lat + espaco / 2, lon + espaco / 2), etiqueta))
+            etiquetas.append(((lat - espaco / 2, lon + espaco / 2), etiqueta))
             lon += espaco
             col_index += 1
-        lat += espaco
+        lat -= espaco
         row_index += 1
     
     return linhas, etiquetas
