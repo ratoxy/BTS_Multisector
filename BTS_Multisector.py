@@ -12,7 +12,7 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
         dlat = (alcance / 111) * np.cos(angulo_rad)
         dlon = (alcance / (111 * np.cos(np.radians(lat)))) * np.sin(angulo_rad)
         pontos.append((lat + dlat, lon + dlon))
-    pontos.append((lat, lon))  # Fechar a célula
+        pontos.append((lat, lon))  # Fechar a célula
     return pontos
 
 def gerar_grelha(area_coberta, espaco):
@@ -68,7 +68,7 @@ def main():
         cor_grelha = st.color_picker("Cor", "#FFA500")
     
     st.sidebar.subheader("Configuração das Células")
-    alcance = st.sidebar.slider("Alcance Geral (km)", 1, 20, alcance_default)
+    alcance = st.sidebar.slider("Alcance Geral (km)", 1, 20, int(alcance_default))
     celulas = []
     area_coberta = None
 
