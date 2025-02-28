@@ -56,7 +56,7 @@ def main():
     st.sidebar.title("_Multi Cell View_")
     st.sidebar.markdown(":blue[**_©2025 NAIIC CTer Santarém_**]")
     
-    mapa_tipo = st.sidebar.selectbox("Tipo de mapa", ["Padrão", "Satélite", "Híbrido", "OpenStreetMap"])
+    mapa_tipo = st.sidebar.selectbox("Mapa", ["Padrão", "Satélite", "Híbrido", "OpenStreetMap"])
     
     tiles = {
         "Padrão": "CartoDB positron",
@@ -71,29 +71,25 @@ def main():
     lat_default, lon_default = 39.2369, -8.6807
     azimute_default, alcance_default = 40, 3.0
     
-    alcance = st.sidebar.number_input("Alcance Geral (km)", value=alcance_default, format="%.1f", step=0.1)
+    alcance = st.sidebar.number_input("Alcance (km)", value=alcance_default, format="%.1f", step=0.1)
     mostrar_grelha = st.sidebar.checkbox("Mostrar Grelha", value=False)
-    tamanho_grelha = st.sidebar.number_input("Tamanho da Grelha (m)", value=500, step=100, min_value=100)
-    cor_grelha = st.sidebar.color_picker("Cor da Grelha", "#FFA500")
-    cor_rotulo = st.sidebar.color_picker("Cor dos Rótulos", "#FFA500")
+    tamanho_grelha = st.sidebar.number_input("Tamanho Grelha (m)", value=500, step=100, min_value=100)
+    cor_grelha = st.sidebar.color_picker("Cor Grelha", "#FFA500")
+    cor_rotulo = st.sidebar.color_picker("Cor Rótulos", "#FFA500")
     
-    st.sidebar.markdown("### Configuração das Células")
+    st.sidebar.markdown("### Células")
     celulas = []
     area_coberta = None
     
-    with st.sidebar.expander("Configuração Individual das Células", expanded=True):
-        for i in range(3):
-            ativo = st.checkbox(f"Ativar Célula {i+1}", value=(i == 0))
-            if ativo:
-                col1, col2 = st.columns(2)
-                with col1:
-                    lat = st.number_input(f"Lat {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
-                with col2:
-                    lon = st.number_input(f"Lon {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
-                azimute = st.slider(f"Azimute {i+1}", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
-                celulas.append((lat, lon, azimute, cores[i]))
-                poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
-                area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
+    for i in range(3):
+        ativo = st.sidebar.checkbox(f"Célula {i+1}", value=(i == 0))
+        if ativo:
+            lat = st.sidebar.number_input(f"Lat {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
+            lon = st.sidebar.number_input(f"Lon {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
+            azimute = st.sidebar.slider(f"Azimute {i+1}", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
+            celulas.append((lat, lon, azimute, cores[i]))
+            poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
+            area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
     
     mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles)
     
