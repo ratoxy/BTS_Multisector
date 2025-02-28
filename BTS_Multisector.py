@@ -49,7 +49,7 @@ def gerar_grelha(area_coberta, espaco=0.0045):
 
 def main():
     st.set_page_config(layout="wide")
-    st.subheader("BTS Multisector View")
+    st.subheader("Multi Cell View")
     st.markdown(":blue[**_©2025   NAIIC CTer Santarém_**]")
     
     cores = ["blue", "red", "green"]
