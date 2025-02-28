@@ -65,8 +65,12 @@ def main():
     for i in range(3):
         ativo = st.sidebar.checkbox(f"Ativar Célula {i+1}", value=(i == 0))
         if ativo:
-            lat = st.sidebar.number_input(f"Latitude {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
-            lon = st.sidebar.number_input(f"Longitude {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
+            col1, col2 = st.sidebar.columns(2)
+            with col1:
+                lat = st.number_input(f"Lat {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
+            with col2:
+                lon = st.number_input(f"Lon {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
+            
             azimute = st.sidebar.slider(f"Azimute {i+1}", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
             celulas.append((lat, lon, azimute, cores[i]))
 
