@@ -21,24 +21,8 @@ def main():
     st.subheader("GSM Sector View")
     st.markdown(":blue[**_©2025   NAIIC CTer Santarém_**]")
     
-    # Coordenadas padrão
-    lat_default = 39.2369
-    lon_default = -8.6807
-    azimute_default = 40
-    alcance_default = 3.0
-    
     # Definição de cores para os setores
     cores = ["blue", "red", "green"]
-    
-    col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
-    with col1:
-        lat = st.number_input("Latitude da BTS", value=lat_default, format="%.6f")
-    with col2:
-        lon = st.number_input("Longitude da BTS", value=lon_default, format="%.6f")
-    with col4:
-        alcance = st.number_input("Alcance (km)", value=alcance_default, format="%.1f", step=0.1)
-    with col5:
-        mapa_tipo = st.selectbox("Tipo de mapa", ["Padrão", "Satélite", "Híbrido"])
     
     # Seleção de até três setores
     setores = []
@@ -46,16 +30,20 @@ def main():
         with st.expander(f"Configuração do Setor {i+1}"):
             ativo = st.checkbox(f"Ativar Setor {i+1}", value=(i == 0))
             if ativo:
-                azimute = st.slider(f"Azimute Setor {i+1}", 0, 360, azimute_default + i * 120)
-                setores.append((azimute, cores[i]))
+                lat = st.number_input(f"Latitude Setor {i+1}", format="%.6f")
+                lon = st.number_input(f"Longitude Setor {i+1}", format="%.6f")
+                alcance = st.number_input(f"Alcance Setor {i+1} (km)", format="%.1f", step=0.1)
+                azimute = st.slider(f"Azimute Setor {i+1}", 0, 360, i * 120)
+                setores.append((lat, lon, azimute, alcance, cores[i]))
     
     # Definição do tipo de mapa
+    mapa_tipo = st.selectbox("Tipo de mapa", ["Padrão", "Satélite", "Híbrido"])
     tiles = "CartoDB positron" if mapa_tipo == "Padrão" else "Esri WorldImagery"
-    mapa = folium.Map(location=[lat, lon], zoom_start=14, tiles=tiles)
-    folium.Marker([lat, lon], tooltip="BTS").add_to(mapa)
+    mapa = folium.Map(location=[39.2369, -8.6807], zoom_start=14, tiles=tiles)
     
     # Adicionar setores ao mapa
-    for azimute, cor in setores:
+    for lat, lon, azimute, alcance, cor in setores:
+        folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
         setor_coords = gerar_setor(lat, lon, azimute, alcance)
         folium.Polygon(
             locations=setor_coords,
