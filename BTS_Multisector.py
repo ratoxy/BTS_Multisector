@@ -56,17 +56,6 @@ def main():
     st.sidebar.title("_Multi Cell View_")
     st.sidebar.markdown(":blue[**_©2025 NAIIC CTer Santarém_**]")
     
-    mapa_tipo = st.sidebar.selectbox("Mapa", ["Padrão", "Satélite", "Híbrido", "OpenStreetMap"])
-    
-    tiles = {
-        "Padrão": "CartoDB positron",
-        "Satélite": "Esri WorldImagery",
-        "OpenStreetMap": "OpenStreetMap"
-    }.get(mapa_tipo, "CartoDB positron")
-    
-    if mapa_tipo == "Híbrido":
-        tiles = "Esri WorldImagery"
-    
     cores = ["blue", "red", "green"]
     lat_default, lon_default = 39.2369, -8.6807
     azimute_default, alcance_default = 40, 3.0
@@ -91,7 +80,10 @@ def main():
             poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
             area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
     
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles)
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13)
+    folium.TileLayer("CartoDB positron", name="Padrão").add_to(mapa)
+    folium.TileLayer("Esri WorldImagery", name="Satélite").add_to(mapa)
+    folium.TileLayer("OpenStreetMap", name="OSM").add_to(mapa)
     
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
