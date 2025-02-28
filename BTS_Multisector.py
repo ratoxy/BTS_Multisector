@@ -108,7 +108,8 @@ def main():
         folium.PolyLine(perimetro, color=cor_grelha, weight=4, opacity=1).add_to(mapa)
     
     st.markdown("<style>.stApp { height: 100vh; overflow: hidden; }</style>", unsafe_allow_html=True)
-    folium_static(mapa, width="100%", height=800)
+    with st.container():
+    folium_static(mapa, width=1000, height=800)
 
 if __name__ == "__main__":
     main()
