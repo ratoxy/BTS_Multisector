@@ -25,18 +25,18 @@ def gerar_grelha(min_lat, max_lat, min_lon, max_lon, espaco=0.0045):
     etiquetas = []
     letras = string.ascii_uppercase
     
-    lon_range = np.arange(min_lon, max_lon + espaco, espaco)
-    lat_range = np.arange(max_lat, min_lat - espaco, -espaco)
+    lon_range = np.arange(min_lon, max_lon, espaco)
+    lat_range = np.arange(min_lat, max_lat, espaco)
     
     for lon in lon_range:
         linhas.append([(min_lat, lon), (max_lat, lon)])
     for lat in lat_range:
         linhas.append([(lat, min_lon), (lat, max_lon)])
     
-    for row_index, lat in enumerate(lat_range, start=1):
+    for row_index, lat in enumerate(lat_range):
         for col_index, lon in enumerate(lon_range):
-            etiqueta = f"{letras[col_index % len(letras)]}{row_index}"
-            etiquetas.append(((lat - espaco / 2, lon + espaco / 2), etiqueta))
+            etiqueta = f"{letras[col_index % len(letras)]}{row_index + 1}"
+            etiquetas.append(((lat + espaco / 2, lon + espaco / 2), etiqueta))
     
     return linhas, etiquetas
 
