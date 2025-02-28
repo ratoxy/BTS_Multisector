@@ -24,8 +24,9 @@ def col_label(n):
         n = n // 26 - 1
     return label
 
-def gerar_grelha(area_coberta, espaco=0.0045):
-    """Gera a grade fixa de 500m x 500m com rótulos contínuos."""
+def gerar_grelha(area_coberta, espaco_m, cor_grelha, cor_rotulo):
+    """Gera a grade fixa com rótulos contínuos e cores personalizáveis."""
+    espaco = espaco_m / 111000  # Converter metros para graus aproximadamente
     min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
     
     linhas, etiquetas = [], []
@@ -48,7 +49,7 @@ def gerar_grelha(area_coberta, espaco=0.0045):
         (min_lat, min_lon)
     ]
     
-    return linhas, etiquetas, perimetro
+    return linhas, etiquetas, perimetro, cor_grelha, cor_rotulo
 
 def main():
     st.set_page_config(layout="wide")
@@ -72,6 +73,9 @@ def main():
     
     alcance = st.sidebar.number_input("Alcance Geral (km)", value=alcance_default, format="%.1f", step=0.1)
     mostrar_grelha = st.sidebar.checkbox("Mostrar Grelha", value=False)
+    tamanho_grelha = st.sidebar.number_input("Tamanho da Grelha (m)", value=500, step=100, min_value=100)
+    cor_grelha = st.sidebar.color_picker("Cor da Grelha", "#FFA500")
+    cor_rotulo = st.sidebar.color_picker("Cor dos Rótulos", "#FFA500")
     
     st.sidebar.markdown("### Configuração das Células")
     celulas = []
@@ -101,24 +105,14 @@ def main():
         ).add_to(mapa)
     
     if mostrar_grelha and area_coberta is not None:
-        grelha, etiquetas, perimetro = gerar_grelha(area_coberta)
+        grelha, etiquetas, perimetro, cor_grelha, cor_rotulo = gerar_grelha(area_coberta, tamanho_grelha, cor_grelha, cor_rotulo)
         for linha in grelha:
-            folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)
+            folium.PolyLine(linha, color=cor_grelha, weight=2, opacity=0.9).add_to(mapa)
         for (pos, label) in etiquetas:
-            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
-        folium.PolyLine(perimetro, color="orange", weight=4, opacity=1).add_to(mapa)
-    
-    if area_coberta:
-        mapa.fit_bounds(area_coberta.bounds)
-    
-    if mapa_tipo == "Híbrido":
-        folium.TileLayer(
-            tiles="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-            attr="Esri", name="Labels", overlay=True
-        ).add_to(mapa)
+            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: {cor_rotulo};">{label}</div>')).add_to(mapa)
+        folium.PolyLine(perimetro, color=cor_grelha, weight=4, opacity=1).add_to(mapa)
     
     folium.LayerControl().add_to(mapa)
-    
     st.markdown("<style>.stApp { height: 100vh; }</style>", unsafe_allow_html=True)
     folium_static(mapa, width=1400, height=800)
 
