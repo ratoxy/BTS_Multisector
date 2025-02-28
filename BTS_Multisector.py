@@ -43,10 +43,9 @@ def gerar_grelha(area_coberta, espaco=0.0045):
 
 def main():
     st.set_page_config(layout="wide")
-    st.sidebar.markdown("### :blue[**_©2025 NAIIC CTer Santarém_**]")
-    
     st.sidebar.subheader("Configuração do Mapa")
-    
+    st.markdown(":blue[**_©2025 NAIIC CTer Santarém_**]")
+
     cores = ["blue", "red", "green"]
     
     lat_default = 39.2369
@@ -92,15 +91,28 @@ def main():
             fill_opacity=0.3
         ).add_to(mapa)
 
-    st.markdown("""
-        <style>
-            [data-testid="stAppViewContainer"] > .main {
-                height: 100vh;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-    
-    st.components.v1.html(mapa._repr_html_(), height=800)
+    if mostrar_grelha and area_coberta is not None:
+        grelha, etiquetas, perimetro = gerar_grelha(area_coberta)
+        for linha in grelha:
+            folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)
+        for (pos, label) in etiquetas:
+            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
+        folium.PolyLine(perimetro, color="orange", weight=4, opacity=1).add_to(mapa)
+
+    if area_coberta:
+        mapa.fit_bounds(area_coberta.bounds)
+
+    if mapa_tipo == "Híbrido":
+        folium.TileLayer(
+            tiles="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+            attr="Esri",
+            name="Labels",
+            overlay=True
+        ).add_to(mapa)
+
+    folium.LayerControl().add_to(mapa)
+
+    st.components.v1.html(mapa._repr_html_(), height=900)
 
 if __name__ == "__main__":
     main()
