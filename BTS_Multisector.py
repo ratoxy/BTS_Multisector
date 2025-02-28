@@ -3,6 +3,7 @@ import numpy as np
 import streamlit as st
 from shapely.geometry import Polygon
 import string
+from streamlit_folium import st_folium
 
 def gerar_celula(lat, lon, azimute, alcance, abertura=120):
     pontos = []
@@ -43,8 +44,7 @@ def gerar_grelha(area_coberta, espaco=0.0045):
 
 def main():
     st.set_page_config(layout="wide")
-    st.sidebar.subheader("Configuração do Mapa")
-    st.markdown(":blue[**_©2025 NAIIC CTer Santarém_**]")
+    st.sidebar.title("Configuração do Mapa")
 
     cores = ["blue", "red", "green"]
     
@@ -53,24 +53,20 @@ def main():
     azimute_default = 40
     alcance_default = 3.0
 
-    # Controles na barra lateral
     mapa_tipo = st.sidebar.selectbox("Tipo de mapa", ["Padrão", "Satélite", "Híbrido"])
     alcance = st.sidebar.number_input("Alcance Geral (km)", value=alcance_default, format="%.1f", step=0.1)
     mostrar_grelha = st.sidebar.checkbox("Mostrar Grelha", value=False)
 
-    st.sidebar.markdown("### Configuração das Células")
+    st.sidebar.subheader("Configuração das Células")
     celulas = []
     area_coberta = None
 
     for i in range(3):
         ativo = st.sidebar.checkbox(f"Ativar Célula {i+1}", value=(i == 0))
         if ativo:
-            col1, col2 = st.sidebar.columns(2)
-            with col1:
-                lat = st.number_input(f"Lat {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
-            with col2:
-                lon = st.number_input(f"Lon {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
-            
+            lat, lon = st.sidebar.columns(2)
+            lat = lat.number_input(f"Lat {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
+            lon = lon.number_input(f"Lon {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
             azimute = st.sidebar.slider(f"Azimute {i+1}", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
             celulas.append((lat, lon, azimute, cores[i]))
 
@@ -112,7 +108,7 @@ def main():
 
     folium.LayerControl().add_to(mapa)
 
-    st.components.v1.html(mapa._repr_html_(), height=900)
+    st_folium(mapa, use_container_width=True, height=800)
 
 if __name__ == "__main__":
     main()
