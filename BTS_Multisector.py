@@ -103,7 +103,25 @@ def main():
     if area_coberta is not None:
         mapa.fit_bounds(area_coberta.bounds)
 
-    st.components.v1.html(mapa._repr_html_(), height=0, scrolling=False)
+    # ✅ **Corrigido: O mapa agora ocupa toda a tela disponível**
+    mapa_html = f"""
+    <style>
+        .fullScreenMap {{
+            position: fixed !important;
+            top: 0px;
+            left: 0px;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 1;
+        }}
+        [data-testid="stSidebar"] {{
+            z-index: 2 !important;
+        }}
+    </style>
+    <div class="fullScreenMap">{mapa._repr_html_()}</div>
+    """
+
+    st.components.v1.html(mapa_html, height=0, scrolling=False)
 
 if __name__ == "__main__":
     main()
