@@ -49,7 +49,7 @@ def gerar_grelha(area_coberta, espaco=0.0045):
 
 def main():
     st.set_page_config(layout="wide")
-    st.subheader("GSM Cell View")
+    st.subheader("BTS Multisector View")
     st.markdown(":blue[**_©2025   NAIIC CTer Santarém_**]")
     
     cores = ["blue", "red", "green"]
@@ -87,7 +87,7 @@ def main():
                 area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
     
     tiles = "CartoDB positron" if mapa_tipo == "Padrão" else "Esri WorldImagery"
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=14, tiles=tiles)
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=12, tiles=tiles)
     
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
@@ -119,7 +119,7 @@ def main():
         ).add_to(mapa)
     
     folium.LayerControl().add_to(mapa)
-    st.components.v1.html(mapa._repr_html_(), height=700)
+    st.components.v1.html(mapa._repr_html_(), height=900)
 
 if __name__ == "__main__":
     main()
