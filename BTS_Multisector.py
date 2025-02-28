@@ -110,7 +110,7 @@ def main():
     st.markdown("<style>.stApp { height: 100vh; overflow: hidden; }</style>", unsafe_allow_html=True)
     
     with st.container():
-        folium_static(mapa, width=1000, height=800)
+        folium_static(mapa, width=st.sidebar.empty().empty(), height=st.sidebar.empty().empty())
 
 if __name__ == "__main__":
     main()
