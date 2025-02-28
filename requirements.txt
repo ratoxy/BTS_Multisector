@@ -1,1 +1,5 @@
-
+folium
+streamlit
+shapely
+geopandas
+numpy
