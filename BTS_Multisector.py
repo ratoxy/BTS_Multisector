@@ -119,7 +119,7 @@ def main():
         ).add_to(mapa)
     
     folium.LayerControl().add_to(mapa)
-    st.components.v1.html(mapa._repr_html_(), height=900)
+    st.components.v1.html(mapa._repr_html_(), height=1500)
 
 if __name__ == "__main__":
     main()
