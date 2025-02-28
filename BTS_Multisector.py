@@ -43,6 +43,7 @@ def gerar_grelha(area_coberta, espaco=0.0045):
 
 def main():
     st.set_page_config(layout="wide")
+     st.sidebar.header("***Multi Cell View***")
     st.sidebar.subheader("###Multi Cell View### :blue[**_©2025 NAIIC CTer Santarém_**]")
     st.sidebar.subheader("Configuração do Mapa")
 
