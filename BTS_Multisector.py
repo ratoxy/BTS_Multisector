@@ -76,4 +76,34 @@ def main():
             celulas.append((lat, lon, azimute, cores[i]))
 
             poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
-            area_coberta = poligono
+            area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
+
+    tiles = "CartoDB positron" if mapa_tipo == "Padrão" else "Esri WorldImagery"
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles)
+
+    for lat, lon, azimute, cor in celulas:
+        folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
+        celula_coords = gerar_celula(lat, lon, azimute, alcance)
+        folium.Polygon(
+            locations=celula_coords,
+            color=cor,
+            fill=True,
+            fill_color=cor,
+            fill_opacity=0.3
+        ).add_to(mapa)
+
+    if mostrar_grelha and area_coberta is not None:
+        grelha, etiquetas, perimetro = gerar_grelha(area_coberta)
+        for linha in grelha:
+            folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)
+        for (pos, label) in etiquetas:
+            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
+        folium.PolyLine(perimetro, color="orange", weight=4, opacity=1).add_to(mapa)
+
+    if area_coberta is not None:
+        mapa.fit_bounds(area_coberta.bounds)
+
+    st.components.v1.html(mapa._repr_html_(), height=0, scrolling=False)
+
+if __name__ == "__main__":
+    main()
