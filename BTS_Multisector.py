@@ -1,7 +1,7 @@
 import folium
 import numpy as np
 import streamlit as st
-from streamlit_folium import folium_static
+from streamlit_folium import st_folium
 from shapely.geometry import Polygon
 import string
 
@@ -104,8 +104,8 @@ def main():
     if area_coberta is not None:
         mapa.fit_bounds(area_coberta.bounds)
 
-    # ✅ **Corrigido: Exibe o mapa corretamente ocupando o máximo da tela**
-    folium_static(mapa, width=0, height=0)
+    # ✅ **Corrigido: Exibe o mapa corretamente ocupando a tela**
+    st_folium(mapa, use_container_width=True, height=700)
 
 if __name__ == "__main__":
     main()
