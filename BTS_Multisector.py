@@ -2,6 +2,7 @@ import folium
 import numpy as np
 import streamlit as st
 from shapely.geometry import Polygon, box
+import string
 
 def gerar_celula(lat, lon, azimute, alcance, abertura=120):
     """
@@ -16,24 +17,42 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
     pontos.append((lat, lon))  # Fechar a célula
     return pontos
 
-def gerar_grelha(min_lat, max_lat, min_lon, max_lon, espaco=0.00135):
+def gerar_grelha(min_lat, max_lat, min_lon, max_lon, espaco=0.00225):
     """
-    Gera uma grelha quadriculada sobre a área coberta pelas células.
+    Gera uma grelha quadriculada de 250 metros sobre a área coberta pelas células, com rótulos alfanuméricos.
     """
     linhas = []
-    # Linhas verticais
+    etiquetas = []
+    letras = string.ascii_uppercase
+    
     lon = min_lon
+    col_index = 0
     while lon <= max_lon:
         linhas.append([(min_lat, lon), (max_lat, lon)])
         lon += espaco
+        col_index += 1
     
-    # Linhas horizontais
     lat = min_lat
+    row_index = 1
     while lat <= max_lat:
         linhas.append([(lat, min_lon), (lat, max_lon)])
         lat += espaco
+        row_index += 1
     
-    return linhas
+    lat = min_lat
+    row_index = 1
+    while lat <= max_lat:
+        lon = min_lon
+        col_index = 0
+        while lon <= max_lon:
+            etiqueta = f"{letras[col_index % len(letras)]}{row_index}"
+            etiquetas.append(((lat + espaco / 2, lon + espaco / 2), etiqueta))
+            lon += espaco
+            col_index += 1
+        lat += espaco
+        row_index += 1
+    
+    return linhas, etiquetas
 
 def main():
     st.set_page_config(layout="wide")
@@ -93,9 +112,11 @@ def main():
         max_lon = max(max_lon, lon + (alcance / 111))
     
     if mostrar_grelha:
-        grelha = gerar_grelha(min_lat, max_lat, min_lon, max_lon)
+        grelha, etiquetas = gerar_grelha(min_lat, max_lat, min_lon, max_lon)
         for linha in grelha:
             folium.PolyLine(linha, color="gray", weight=1, opacity=0.5).add_to(mapa)
+        for (pos, label) in etiquetas:
+            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: black;">{label}</div>')).add_to(mapa)
     
     mapa.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
     
