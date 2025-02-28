@@ -1,7 +1,7 @@
 import folium
 import numpy as np
 import streamlit as st
-from shapely.geometry import Polygon, box
+from shapely.geometry import Polygon
 import string
 
 def gerar_celula(lat, lon, azimute, alcance, abertura=120):
@@ -16,8 +16,7 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
 
 def gerar_grelha(area_coberta, espaco=0.0045):
     min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
-    linhas = []
-    etiquetas = []
+    linhas, etiquetas = [], []
     letras = string.ascii_uppercase
     
     lon_range = np.arange(min_lon, max_lon, espaco)
@@ -44,29 +43,9 @@ def gerar_grelha(area_coberta, espaco=0.0045):
 def main():
     st.set_page_config(layout="wide")
 
-    st.markdown(
-        """
-        <style>
-        [data-testid="stSidebar"] { transition: width 0.3s ease-in-out; }
-        iframe {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: calc(100% - 300px);
-            height: 100vh;
-            border: none;
-            transition: width 0.3s ease-in-out;
-        }
-        @media (max-width: 768px) {
-            iframe { width: 100%; }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.sidebar.subheader("Configuração do Mapa")
-    st.markdown(":blue[**_©2025 NAIIC CTer Santarém_**]")
+    # ✅ **Coloca os títulos no topo da barra lateral**
+    st.sidebar.title("Configuração do Mapa")
+    st.sidebar.markdown(":blue[**_©2025 NAIIC CTer Santarém_**]")
 
     cores = ["blue", "red", "green"]
 
@@ -80,9 +59,8 @@ def main():
 
     mostrar_grelha = st.sidebar.checkbox("Mostrar Grelha", value=False)
 
-    st.sidebar.markdown("### Configuração das Células")
-    celulas = []
-    area_coberta = None
+    st.sidebar.subheader("Configuração das Células")
+    celulas, area_coberta = [], None
 
     for i in range(3):
         ativo = st.sidebar.checkbox(f"Célula {i+1}", value=(i == 0))
@@ -98,34 +76,4 @@ def main():
             celulas.append((lat, lon, azimute, cores[i]))
 
             poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
-            area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
-
-    tiles = "CartoDB positron" if mapa_tipo == "Padrão" else "Esri WorldImagery"
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles)
-
-    for lat, lon, azimute, cor in celulas:
-        folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
-        celula_coords = gerar_celula(lat, lon, azimute, alcance)
-        folium.Polygon(
-            locations=celula_coords,
-            color=cor,
-            fill=True,
-            fill_color=cor,
-            fill_opacity=0.3
-        ).add_to(mapa)
-
-    if mostrar_grelha and area_coberta is not None:
-        grelha, etiquetas, perimetro = gerar_grelha(area_coberta)
-        for linha in grelha:
-            folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)
-        for (pos, label) in etiquetas:
-            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
-        folium.PolyLine(perimetro, color="orange", weight=4, opacity=1).add_to(mapa)
-
-    if area_coberta is not None:
-        mapa.fit_bounds(area_coberta.bounds)
-
-    st.components.v1.html(mapa._repr_html_(), height=0, scrolling=False)
-
-if __name__ == "__main__":
-    main()
+            area_coberta = poligono
