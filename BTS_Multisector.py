@@ -16,13 +16,10 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120, pontos=40):
     pontos_lista.append((lat, lon))  # Fechar a célula
     return pontos_lista
 
-def gerar_grelha(area_coberta, espaco=None):
-    """Gera a grade com espaçamento dinâmico baseado na média do alcance."""
+def gerar_grelha(area_coberta, espaco=0.0045):
+    """Gera a grade fixa de 500m x 500m."""
     min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
     letras = string.ascii_uppercase
-    
-    if espaco is None:
-        espaco = (max_lat - min_lat) / 10  # Ajuste automático do espaçamento
     
     linhas, etiquetas = [], []
     lon_range = np.arange(min_lon, max_lon + espaco, espaco)
