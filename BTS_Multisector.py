@@ -117,7 +117,7 @@ if mapa_tipo == "Híbrido":
 folium.LayerControl().add_to(mapa)
 
 # Exibir o mapa ocupando toda a janela
-st_folium(mapa, use_container_width=True, height=900)
+mapa_html = st_folium(mapa, use_container_width=True, height=900)
 
 # Rodapé
 st.sidebar.markdown("---")
