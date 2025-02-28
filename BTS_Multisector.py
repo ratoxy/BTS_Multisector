@@ -33,12 +33,18 @@ def gerar_grelha(min_lat, max_lat, min_lon, max_lon, espaco=0.0045):
     for lat in lat_range:
         linhas.append([(lat, min_lon - espaco), (lat, max_lon)])
     
+    perimetro = [
+        (min_lat, min_lon), (min_lat, max_lon),
+        (max_lat, max_lon), (max_lat, min_lon),
+        (min_lat, min_lon)
+    ]
+    
     for row_index, lat in enumerate(lat_range):
         for col_index, lon in enumerate(lon_range):
             etiqueta = f"{letras[col_index % len(letras)]}{row_index + 1}"
             etiquetas.append(((lat - espaco / 2, lon + espaco / 2), etiqueta))
     
-    return linhas, etiquetas
+    return linhas, etiquetas, perimetro
 
 def main():
     st.set_page_config(layout="wide")
@@ -96,11 +102,12 @@ def main():
         ).add_to(mapa)
     
     if mostrar_grelha:
-        grelha, etiquetas = gerar_grelha(min_lat, max_lat, min_lon, max_lon)
+        grelha, etiquetas, perimetro = gerar_grelha(min_lat, max_lat, min_lon, max_lon)
         for linha in grelha:
-            folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)  # Aumentando a espessura das linhas
+            folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)
         for (pos, label) in etiquetas:
             folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
+        folium.PolyLine(perimetro, color="orange", weight=4, opacity=1).add_to(mapa)  # Contorno mais grosso
     
     mapa.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
     
