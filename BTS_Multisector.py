@@ -14,54 +14,29 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
     pontos.append((lat, lon))
     return pontos
 
-def gerar_grelha(area_coberta, espaco=0.0045):
-    min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
-    linhas = []
-    etiquetas = []
-    letras = string.ascii_uppercase
-    
-    lon_range = np.arange(min_lon, max_lon, espaco)
-    lat_range = np.arange(max_lat, min_lat, -espaco)
-
-    for lon in lon_range:
-        linhas.append([(min_lat, lon), (max_lat, lon)])
-    for lat in lat_range:
-        linhas.append([(lat, min_lon), (lat, max_lon)])
-
-    perimetro = [(min_lat, min_lon), (min_lat, max_lon), (max_lat, max_lon), (max_lat, min_lon), (min_lat, min_lon)]
-    
-    for row_index, lat in enumerate(lat_range[:-1]):  
-        for col_index, lon in enumerate(lon_range[:-1]):
-            etiqueta = f"{letras[col_index % len(letras)]}{row_index + 1}"
-            etiquetas.append(((lat - espaco / 2, lon + espaco / 2), etiqueta))
-    
-    return linhas, etiquetas, perimetro
-
 def main():
     st.set_page_config(layout="wide")
 
-    # CSS para tornar o mapa responsivo e ocupar a tela toda
+    # CSS para ajustar dinamicamente a largura do mapa quando a sidebar está aberta ou fechada
     st.markdown(
         """
         <style>
-        [data-testid="stAppViewContainer"] {
-            padding: 0;
-        }
         [data-testid="stSidebar"] {
-            width: 250px !important;
-            background-color: #f8f9fa;
-        }
-        [data-testid="stVerticalBlock"] {
-            padding-top: 0;
+            transition: width 0.3s ease-in-out;
         }
         iframe {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
+            width: calc(100% - 300px);
             height: 100vh;
             border: none;
-            z-index: 999;
+            transition: width 0.3s ease-in-out;
+        }
+        @media (max-width: 768px) {
+            iframe {
+                width: 100%;
+            }
         }
         </style>
         """,
@@ -83,12 +58,9 @@ def main():
         mapa_tipo = st.selectbox("Tipo de mapa", ["Padrão", "Satélite", "Híbrido"])
     with col2:
         alcance = st.number_input("Alcance (km)", value=alcance_default, format="%.1f", step=0.1)
-    
-    mostrar_grelha = st.sidebar.checkbox("Mostrar Grelha", value=False)
 
     st.sidebar.markdown("### Configuração das Células")
     celulas = []
-    area_coberta = None
 
     for i in range(3):
         ativo = st.sidebar.checkbox(f"Célula {i+1}", value=(i == 0))
@@ -102,8 +74,6 @@ def main():
                 azimute = st.slider(f"Az {i+1}", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
 
             celulas.append((lat, lon, azimute, cores[i]))
-            poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
-            area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
 
     tiles = "CartoDB positron" if mapa_tipo == "Padrão" else "Esri WorldImagery"
     mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles)
@@ -119,30 +89,7 @@ def main():
             fill_opacity=0.3
         ).add_to(mapa)
 
-    if mostrar_grelha and area_coberta is not None:
-        grelha, etiquetas, perimetro = gerar_grelha(area_coberta)
-        for linha in grelha:
-            folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)
-        for (pos, label) in etiquetas:
-            folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
-        folium.PolyLine(perimetro, color="orange", weight=4, opacity=1).add_to(mapa)
-
-    if area_coberta:
-        mapa.fit_bounds(area_coberta.bounds)
-
-    if mapa_tipo == "Híbrido":
-        folium.TileLayer(
-            tiles="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-            attr="Esri",
-            name="Labels",
-            overlay=True
-        ).add_to(mapa)
-
-    folium.LayerControl().add_to(mapa)
-
-    # Mapa ajustado para ocupar toda a tela do navegador
     st.components.v1.html(mapa._repr_html_(), height=0, scrolling=False)
 
 if __name__ == "__main__":
     main()
-
