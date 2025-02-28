@@ -62,9 +62,15 @@ def main():
     
     mapa_tipo = st.sidebar.selectbox("Tipo de mapa", ["Padrão", "Satélite", "OSM"])
     alcance = st.sidebar.number_input("Alcance (km)", value=alcance_default, format="%.1f", step=0.1)
-    mostrar_grelha = st.sidebar.checkbox("Mostrar Grelha", value=False)
-    tamanho_grelha = st.sidebar.number_input("Tamanho Grelha (m)", value=500, step=100, min_value=100)
-    cor_grelha = st.sidebar.color_picker("Cor Grelha e Rótulos", "#FFA500")
+    
+    with st.sidebar.expander("Grelha"):
+        col1, col2, col3 = st.columns([1, 1, 2])
+        with col1:
+            mostrar_grelha = st.checkbox("Mostrar", value=False)
+        with col2:
+            tamanho_grelha = st.number_input("Tamanho (m)", value=500, step=100, min_value=100, label_visibility="collapsed")
+        with col3:
+            cor_grelha = st.color_picker("Cor", "#FFA500", label_visibility="collapsed")
     
     st.sidebar.markdown("### Células")
     celulas = []
