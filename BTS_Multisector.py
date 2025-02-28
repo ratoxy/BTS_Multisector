@@ -17,10 +17,11 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
     pontos.append((lat, lon))  # Fechar a célula
     return pontos
 
-def gerar_grelha(min_lat, max_lat, min_lon, max_lon, espaco=0.0045):
+def gerar_grelha(area_coberta, espaco=0.0045):
     """
-    Gera uma grelha quadriculada de 500 metros sobre toda a área coberta pelas células, com rótulos alfanuméricos.
+    Gera uma grelha quadriculada de 500 metros sobre a área exata coberta pelos setores ativos, com rótulos alfanuméricos.
     """
+    min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
     linhas = []
     etiquetas = []
     letras = string.ascii_uppercase
@@ -29,9 +30,9 @@ def gerar_grelha(min_lat, max_lat, min_lon, max_lon, espaco=0.0045):
     lat_range = np.arange(max_lat, min_lat - espaco, -espaco)  # Invertendo para iniciar no canto superior esquerdo
     
     for lon in lon_range:
-        linhas.append([(min_lat - espaco, lon), (max_lat, lon)])
+        linhas.append([(min_lat, lon), (max_lat, lon)])
     for lat in lat_range:
-        linhas.append([(lat, min_lon - espaco), (lat, max_lon)])
+        linhas.append([(lat, min_lon), (lat, max_lon)])
     
     perimetro = [
         (min_lat, min_lon), (min_lat, max_lon),
@@ -69,7 +70,7 @@ def main():
     st.markdown("### Configuração das Células")
     colunas = st.columns(3)
     celulas = []
-    min_lat, max_lat, min_lon, max_lon = 90, -90, 180, -180
+    area_coberta = None
     for i, col in enumerate(colunas):
         with col:
             ativo = st.checkbox(f"Ativar Célula {i+1}", value=(i == 0))
@@ -82,10 +83,8 @@ def main():
                 azimute = st.slider(f"Azimute", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
                 celulas.append((lat, lon, azimute, cores[i]))
                 
-                min_lat = min(min_lat, lat - (alcance / 111))
-                max_lat = max(max_lat, lat + (alcance / 111))
-                min_lon = min(min_lon, lon - (alcance / 111))
-                max_lon = max(max_lon, lon + (alcance / 111))
+                poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
+                area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
     
     tiles = "CartoDB positron" if mapa_tipo == "Padrão" else "Esri WorldImagery"
     mapa = folium.Map(location=[lat_default, lon_default], zoom_start=14, tiles=tiles)
@@ -101,15 +100,15 @@ def main():
             fill_opacity=0.3
         ).add_to(mapa)
     
-    if mostrar_grelha:
-        grelha, etiquetas, perimetro = gerar_grelha(min_lat, max_lat, min_lon, max_lon)
+    if mostrar_grelha and area_coberta is not None:
+        grelha, etiquetas, perimetro = gerar_grelha(area_coberta)
         for linha in grelha:
             folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)
         for (pos, label) in etiquetas:
             folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
         folium.PolyLine(perimetro, color="orange", weight=4, opacity=1).add_to(mapa)  # Contorno mais grosso
     
-    mapa.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
+    mapa.fit_bounds(area_coberta.bounds)
     
     if mapa_tipo == "Híbrido":
         folium.TileLayer(
