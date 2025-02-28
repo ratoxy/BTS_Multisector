@@ -39,6 +39,35 @@ def gerar_grelha(area_coberta, espaco=0.0045):
 
 def main():
     st.set_page_config(layout="wide")
+
+    # CSS para tornar o mapa responsivo e ocupar a tela toda
+    st.markdown(
+        """
+        <style>
+        [data-testid="stAppViewContainer"] {
+            padding: 0;
+        }
+        [data-testid="stSidebar"] {
+            width: 250px !important;
+            background-color: #f8f9fa;
+        }
+        [data-testid="stVerticalBlock"] {
+            padding-top: 0;
+        }
+        iframe {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            border: none;
+            z-index: 999;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     st.sidebar.subheader("Configuração do Mapa")
     st.markdown(":blue[**_©2025 NAIIC CTer Santarém_**]")
 
@@ -49,7 +78,6 @@ def main():
     azimute_default = 40
     alcance_default = 3.0
 
-    # Controles otimizados
     col1, col2 = st.sidebar.columns(2)
     with col1:
         mapa_tipo = st.selectbox("Tipo de mapa", ["Padrão", "Satélite", "Híbrido"])
@@ -112,7 +140,9 @@ def main():
 
     folium.LayerControl().add_to(mapa)
 
-    st.components.v1.html(mapa._repr_html_(), height=900)
+    # Mapa ajustado para ocupar toda a tela do navegador
+    st.components.v1.html(mapa._repr_html_(), height=0, scrolling=False)
 
 if __name__ == "__main__":
     main()
+
