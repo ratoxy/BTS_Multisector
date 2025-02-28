@@ -35,13 +35,15 @@ def main():
     
     # Seleção de até três células
     celulas = []
-    for i in range(3):
-        with st.expander(f"Configuração da Célula {i+1}"):
+    st.markdown("### Configuração das Células")
+    colunas = st.columns(3)
+    for i, col in enumerate(colunas):
+        with col:
             ativo = st.checkbox(f"Ativar Célula {i+1}", value=(i == 0))
             if ativo:
-                lat = st.number_input(f"Latitude Célula {i+1}", value=lat_default, format="%.6f")
-                lon = st.number_input(f"Longitude Célula {i+1}", value=lon_default, format="%.6f")
-                azimute = st.slider(f"Azimute Célula {i+1}", 0, 360, azimute_default + i * 120)
+                lat = st.number_input(f"Latitude Célula {i+1}", value=lat_default, format="%.6f", key=f"lat_{i}")
+                lon = st.number_input(f"Longitude Célula {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
+                azimute = st.slider(f"Azimute", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
                 celulas.append((lat, lon, azimute, cores[i]))
     
     # Definição do tipo de mapa
