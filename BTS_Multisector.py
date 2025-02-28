@@ -98,7 +98,7 @@ def main():
     if mostrar_grelha:
         grelha, etiquetas = gerar_grelha(min_lat, max_lat, min_lon, max_lon)
         for linha in grelha:
-            folium.PolyLine(linha, color="orange", weight=1, opacity=0.7).add_to(mapa)
+            folium.PolyLine(linha, color="orange", weight=2, opacity=0.9).add_to(mapa)  # Aumentando a espessura das linhas
         for (pos, label) in etiquetas:
             folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: orange;">{label}</div>')).add_to(mapa)
     
