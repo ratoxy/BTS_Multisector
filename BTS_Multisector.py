@@ -111,8 +111,32 @@ def main():
 
     folium.LayerControl().add_to(mapa)
     
-    st.markdown("<style>iframe {width: 100vw !important; height: 90vh !important;}</style>", unsafe_allow_html=True)
-    folium_static(mapa, width="100%", height="90vh")
+    # Ajuste correto para ocupar a tela inteira no desktop e mobile
+    st.markdown(
+        """
+        <style>
+            [data-testid="stSidebar"] {
+                width: 300px !important;
+            }
+            .main .block-container {
+                padding-top: 0px;
+                padding-bottom: 0px;
+            }
+            iframe {
+                width: 100% !important;
+                height: calc(100vh - 20px) !important;
+            }
+            @media (max-width: 768px) {
+                iframe {
+                    height: 100vh !important;
+                }
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    folium_static(mapa, width=800, height=600)  # O tamanho real será ajustado pelo CSS
 
 if __name__ == "__main__":
     main()
