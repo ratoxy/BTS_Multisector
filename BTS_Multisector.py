@@ -89,15 +89,10 @@ def main():
         "Padrão": "CartoDB positron",
         "Satélite": "Esri WorldImagery",
         "OpenStreetMap": "OpenStreetMap",
-        "Terreno": "https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.png"
+        "Terreno": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
     }
     
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles="OpenStreetMap")
-    
-    if mapa_tipo == "Terreno":
-        folium.TileLayer(tiles_dict["Terreno"], attr="Stamen Terrain").add_to(mapa)
-    else:
-        mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo])
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo], attr="Esri WorldTopoMap")
     
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
