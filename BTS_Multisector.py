@@ -90,7 +90,7 @@ def main():
     mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict.get(mapa_tipo, "OpenStreetMap"))
     
     if mapa_tipo == "Terreno":
-        folium.TileLayer("Stamen Terrain", attr="Map tiles by Stamen Design, CC BY 3.0 — Map data © OpenStreetMap contributors").add_to(mapa)
+        folium.TileLayer("USGS USImageryTopo", attr="USGS Topographic Imagery").add_to(mapa)
     
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
@@ -127,3 +127,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
