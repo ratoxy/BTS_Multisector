@@ -118,9 +118,12 @@ def main():
     st.markdown(
         """
         <style>
+            [data-testid="stAppViewContainer"] {
+                padding-top: 0 !important;
+            }
             iframe {
                 width: 100% !important;
-                height: calc(100vh - 20px) !important;
+                height: 100vh !important;
             }
         </style>
         """,
