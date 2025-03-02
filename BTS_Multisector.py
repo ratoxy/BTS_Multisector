@@ -21,8 +21,8 @@ def gerar_grelha(area_coberta, espaco):
     etiquetas = []
     letras = string.ascii_uppercase
     
-    lon_range = np.arange(min_lon, max_lon, espaco)
-    lat_range = np.arange(max_lat, min_lat, -espaco)
+    lon_range = np.arange(min_lon, max_lon, espaco / (111 * np.cos(np.radians((max_lat + min_lat) / 2))))
+    lat_range = np.arange(max_lat, min_lat, -espaco / 111)
 
     for lon in lon_range:
         linhas.append([(min_lat, lon), (max_lat, lon)])
@@ -37,11 +37,13 @@ def gerar_grelha(area_coberta, espaco):
     
     for row_index, lat in enumerate(lat_range[:-1]):  
         for col_index, lon in enumerate(lon_range[:-1]):
-            coluna_label = "".join(
-                letras[(col_index // len(letras)) - 1] if col_index >= len(letras) else "" for i in range((col_index // len(letras)) + 1)
-            ) + letras[col_index % len(letras)]
+            coluna_label = ""
+            temp_col_index = col_index
+            while temp_col_index >= 0:
+                coluna_label = letras[temp_col_index % len(letras)] + coluna_label
+                temp_col_index = temp_col_index // len(letras) - 1
             etiqueta = f"{coluna_label}{row_index + 1}"
-            etiquetas.append(((lat - espaco / 2, lon + espaco / 2), etiqueta))
+            etiquetas.append(((lat - espaco / 222, lon + espaco / (222 * np.cos(np.radians(lat)))), etiqueta))
     
     return linhas, etiquetas, perimetro
 
@@ -58,7 +60,6 @@ def main():
     alcance_default = 3
     tamanho_quadricula_default = 500
 
-    # Layout da barra lateral ajustado conforme sua preferência
     with st.sidebar.expander("Configuração Geral", expanded=True):
         mapa_tipo = st.selectbox("Tipo de mapa", ["Padrão", "Satélite", "OpenStreetMap"])
         mostrar_grelha = st.toggle("Mostrar Grelha")
@@ -113,25 +114,7 @@ def main():
 
     folium.LayerControl().add_to(mapa)
     
-    st.markdown(
-        """
-        <style>
-            iframe {
-                width: 100% !important;
-                height: calc(100vh - 20px) !important;
-            }
-            @media (max-width: 768px) {
-                iframe {
-                    height: 100vh !important;
-                }
-            }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
     folium_static(mapa, width=800, height=600)
 
 if __name__ == "__main__":
     main()
-
