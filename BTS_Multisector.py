@@ -85,9 +85,13 @@ def main():
                 poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
                 area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
 
-    tiles_dict = {"Padrão": "CartoDB positron", "Satélite": "Esri WorldImagery", "OpenStreetMap": "OpenStreetMap", "Terreno": "Stamen Terrain"}
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo])
-
+    tiles_dict = {"Padrão": "CartoDB positron", "Satélite": "Esri WorldImagery", "OpenStreetMap": "OpenStreetMap"}
+    
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict.get(mapa_tipo, "OpenStreetMap"))
+    
+    if mapa_tipo == "Terreno":
+        folium.TileLayer("Stamen Terrain", attr="Map tiles by Stamen Design, CC BY 3.0 — Map data © OpenStreetMap contributors").add_to(mapa)
+    
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
         celula_coords = gerar_celula(lat, lon, azimute, alcance)
@@ -103,15 +107,7 @@ def main():
         folium.PolyLine(perimetro, color=cor_grelha, weight=4, opacity=1).add_to(mapa)
 
     if area_coberta:
-        if isinstance(area_coberta, MultiPolygon):
-            bounds = [p.bounds for p in area_coberta.geoms]
-            min_lat = min(b[1] for b in bounds)
-            min_lon = min(b[0] for b in bounds)
-            max_lat = max(b[3] for b in bounds)
-            max_lon = max(b[2] for b in bounds)
-            mapa.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
-        else:
-            mapa.fit_bounds(area_coberta.bounds)
+        mapa.fit_bounds(area_coberta.bounds)
 
     folium.LayerControl().add_to(mapa)
     
