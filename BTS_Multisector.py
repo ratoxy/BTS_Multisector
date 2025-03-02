@@ -1,7 +1,7 @@
 import folium
 import numpy as np
 import streamlit as st
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, MultiPolygon
 import string
 from streamlit_folium import folium_static
 
@@ -15,36 +15,35 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
     pontos.append((lat, lon))  # Fechar a célula
     return pontos
 
+def gerar_rotulo_coluna(indice):
+    letras = string.ascii_uppercase
+    rotulo = ""
+    while indice >= 0:
+        rotulo = letras[indice % 26] + rotulo
+        indice = (indice // 26) - 1
+    return rotulo
+
 def gerar_grelha(area_coberta, espaco):
     min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
     linhas = []
     etiquetas = []
-    letras = string.ascii_uppercase
     
-    lon_range = np.arange(min_lon, max_lon, espaco / (111 * np.cos(np.radians((max_lat + min_lat) / 2))))
-    lat_range = np.arange(max_lat, min_lat, -espaco / 111)
+    lon_range = np.arange(min_lon, max_lon, espaco)
+    lat_range = np.arange(max_lat, min_lat, -espaco)
 
     for lon in lon_range:
         linhas.append([(min_lat, lon), (max_lat, lon)])
     for lat in lat_range:
         linhas.append([(lat, min_lon), (lat, max_lon)])
 
-    perimetro = [
-        (min_lat, min_lon), (min_lat, max_lon),
-        (max_lat, max_lon), (max_lat, min_lon),
-        (min_lat, min_lon)
-    ]
-    
-    for row_index, lat in enumerate(lat_range[:-1]):  
+    perimetro = [(min_lat, min_lon), (min_lat, max_lon), (max_lat, max_lon), (max_lat, min_lon), (min_lat, min_lon)]
+
+    for row_index, lat in enumerate(lat_range[:-1]):
         for col_index, lon in enumerate(lon_range[:-1]):
-            coluna_label = ""
-            temp_col_index = col_index
-            while temp_col_index >= 0:
-                coluna_label = letras[temp_col_index % len(letras)] + coluna_label
-                temp_col_index = temp_col_index // len(letras) - 1
+            coluna_label = gerar_rotulo_coluna(col_index)
             etiqueta = f"{coluna_label}{row_index + 1}"
-            etiquetas.append(((lat - espaco / 222, lon + espaco / (222 * np.cos(np.radians(lat)))), etiqueta))
-    
+            etiquetas.append(((lat - espaco / 2, lon + espaco / 2), etiqueta))
+
     return linhas, etiquetas, perimetro
 
 def main():
@@ -61,9 +60,9 @@ def main():
     tamanho_quadricula_default = 500
 
     with st.sidebar.expander("Configuração Geral", expanded=True):
-        mapa_tipo = st.selectbox("Tipo de mapa", ["Padrão", "Satélite", "OpenStreetMap"])
+        mapa_tipo = st.selectbox("Tipo de mapa", ["Padrão", "Satélite", "OpenStreetMap", "Terreno"])
         mostrar_grelha = st.toggle("Mostrar Grelha")
-        tamanho_quadricula = st.slider("Tamanho da Quadricula (m)", 0, 1000, tamanho_quadricula_default, step=50)
+        tamanho_quadricula = st.slider("Tamanho da Quadricula (m)", 50, 1000, tamanho_quadricula_default, step=50)
         cor_grelha = st.color_picker("Cor da Grelha e Rótulos", "#FFA500")
     
     with st.sidebar.expander("Configuração das Células", expanded=True):
@@ -86,19 +85,13 @@ def main():
                 poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
                 area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
 
-    tiles_dict = {"Padrão": "CartoDB positron", "Satélite": "Esri WorldImagery", "OpenStreetMap": "OpenStreetMap"}
+    tiles_dict = {"Padrão": "CartoDB positron", "Satélite": "Esri WorldImagery", "OpenStreetMap": "OpenStreetMap", "Terreno": "Stamen Terrain"}
     mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo])
 
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
         celula_coords = gerar_celula(lat, lon, azimute, alcance)
-        folium.Polygon(
-            locations=celula_coords,
-            color=cor,
-            fill=True,
-            fill_color=cor,
-            fill_opacity=0.3
-        ).add_to(mapa)
+        folium.Polygon(locations=celula_coords, color=cor, fill=True, fill_color=cor, fill_opacity=0.3).add_to(mapa)
 
     if mostrar_grelha and area_coberta is not None:
         espaco = tamanho_quadricula / 111000
@@ -110,10 +103,17 @@ def main():
         folium.PolyLine(perimetro, color=cor_grelha, weight=4, opacity=1).add_to(mapa)
 
     if area_coberta:
-        mapa.fit_bounds(area_coberta.bounds)
+        if isinstance(area_coberta, MultiPolygon):
+            bounds = [p.bounds for p in area_coberta.geoms]
+            min_lat = min(b[1] for b in bounds)
+            min_lon = min(b[0] for b in bounds)
+            max_lat = max(b[3] for b in bounds)
+            max_lon = max(b[2] for b in bounds)
+            mapa.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
+        else:
+            mapa.fit_bounds(area_coberta.bounds)
 
     folium.LayerControl().add_to(mapa)
-    
     folium_static(mapa, width=800, height=600)
 
 if __name__ == "__main__":
