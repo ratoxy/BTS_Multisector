@@ -128,4 +128,14 @@ def main():
         lons = [lon for _, lon, _, _ in celulas]
         mapa.fit_bounds([[min(lats), min(lons)], [max(lats), max(lons)]])
 
-    folium.LayerControl().add_to(map
+    folium.LayerControl().add_to(mapa) # Correção aqui!
+
+    st.markdown(
+        """
+        <style>
+            iframe {
+                width: 100% !important;
+                height: calc(100vh - 20px) !important;
+            }
+        </style>
+        """,
