@@ -119,7 +119,7 @@ def main():
         mapa.fit_bounds([[min(lats), min(lons)], [max(lats), max(lons)]])
 
     folium.LayerControl().add_to(mapa)
-    
+       
     st.markdown(
         """
         <style>
@@ -129,3 +129,7 @@ def main():
             }
         </style>
         """,
+        unsafe_allow_html=True
+    )
+
+    folium_static(mapa)
