@@ -112,6 +112,15 @@ def main():
         celula_coords = gerar_celula(lat, lon, azimute, alcance)
         folium.Polygon(locations=celula_coords, color=cor, fill=True, fill_color=cor, fill_opacity=0.3).add_to(mapa)
 
+    # Centraliza o mapa na área da grade (mesmo se a grade não estiver ativa)
+    if area_coberta is not None:
+        min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
+        mapa.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
+    elif celulas:
+        lats = [lat for lat, _, _, _ in celulas]
+        lons = [lon for _, lon, _, _ in celulas]
+        mapa.fit_bounds([[min(lats), min(lons)], [max(lats), max(lons)]])
+
     if mostrar_grelha and area_coberta is not None:
         grelha, etiquetas, perimetro = gerar_grelha(area_coberta, tamanho_quadricula)
         for linha in grelha:
@@ -119,15 +128,6 @@ def main():
         for (pos, label) in etiquetas:
             folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: {cor_grelha};">{label}</div>')).add_to(mapa)
         folium.PolyLine(perimetro, color=cor_grelha, weight=4, opacity=1).add_to(mapa)
-
-    # Centraliza o mapa na área da grade
-    if mostrar_grelha and area_coberta is not None:
-        min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
-        mapa.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
-    elif celulas:
-        lats = [lat for lat, _, _, _ in celulas]
-        lons = [lon for _, lon, _, _ in celulas]
-        mapa.fit_bounds([[min(lats), min(lons)], [max(lats), max(lons)]])
 
     folium.LayerControl().add_to(mapa)
 
