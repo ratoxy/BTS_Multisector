@@ -45,7 +45,7 @@ def gerar_grelha(area_coberta, tamanho_quadricula):
         for col_index, lon in enumerate(lon_range[:-1]):
             coluna_label = gerar_rotulo_coluna(col_index)
             etiqueta = f"{coluna_label}{row_index + 1}"
-            etiquetas.append(((lat - delta_lat / 2, lon + delta_lon / 2), etiqueta))
+            etiquetas.append(((lat - delta_lat / 2, lon + delta_lon(lat) / 2), etiqueta))
 
     return linhas, etiquetas, perimetro
 
@@ -94,10 +94,10 @@ def main():
         "OpenStreetMap": "OpenStreetMap",
         "Terreno": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
     }
-    
+
     # Recriar o mapa a cada alteração
     mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo], attr="Esri WorldTopoMap")
-    
+
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
         celula_coords = gerar_celula(lat, lon, azimute, alcance)
@@ -113,13 +113,13 @@ def main():
 
     if area_coberta:
         mapa.fit_bounds(area_coberta.bounds)
-    elif celulas: # Centralizar nas coordenadas das células se não houver área coberta
+    elif celulas:  # Centralizar nas coordenadas das células se não houver área coberta
         lats = [lat for lat, _, _, _ in celulas]
         lons = [lon for _, lon, _, _ in celulas]
         mapa.fit_bounds([[min(lats), min(lons)], [max(lats), max(lons)]])
 
     folium.LayerControl().add_to(mapa)
-       
+
     st.markdown(
         """
         <style>
@@ -133,3 +133,6 @@ def main():
     )
 
     folium_static(mapa)
+
+if __name__ == "__main__":
+    main()
