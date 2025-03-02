@@ -120,9 +120,10 @@ def main():
             folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: {cor_grelha};">{label}</div>')).add_to(mapa)
         folium.PolyLine(perimetro, color=cor_grelha, weight=4, opacity=1).add_to(mapa)
 
-    # Centraliza o mapa após a criação das células
-    if area_coberta:
-        mapa.fit_bounds(area_coberta.bounds)
+    # Centraliza o mapa na área da grade
+    if mostrar_grelha and area_coberta is not None:
+        min_lat, min_lon, max_lat, max_lon = area_coberta.bounds
+        mapa.fit_bounds([[min_lat, min_lon], [max_lat, max_lon]])
     elif celulas:
         lats = [lat for lat, _, _, _ in celulas]
         lons = [lon for _, lon, _, _ in celulas]
