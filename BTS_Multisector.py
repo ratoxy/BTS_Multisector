@@ -142,4 +142,7 @@ def main():
         unsafe_allow_html=True
     )
 
-    folium_
+    folium_static(mapa)
+
+if __name__ == "__main__":
+    main()
