@@ -31,12 +31,14 @@ def gerar_grelha(area_coberta, tamanho_quadricula):
     delta_lat = tamanho_quadricula / 111000
     
     lat_range = np.arange(max_lat, min_lat, -delta_lat)
+    
+    # Inicializa lon_range aqui, antes do loop
     lon_range = []
+    if lat_range.size > 0: # Check if lat_range has any elements
+        delta_lon = tamanho_quadricula / (111000 * np.cos(np.radians((max_lat + min_lat) / 2)))
+        lon_range = np.arange(min_lon, max_lon, delta_lon)
     
     for lat in lat_range:
-        delta_lon = tamanho_quadricula / (111000 * np.cos(np.radians(lat)))
-        if not lon_range:
-            lon_range = np.arange(min_lon, max_lon, delta_lon)
         linhas.append([(lat, min_lon), (lat, max_lon)])
     
     for lon in lon_range:
@@ -45,11 +47,12 @@ def gerar_grelha(area_coberta, tamanho_quadricula):
     perimetro = [(min_lat, min_lon), (min_lat, max_lon), (max_lat, max_lon), (max_lat, min_lon), (min_lat, min_lon)]
 
     for row_index, lat in enumerate(lat_range[:-1]):
-        delta_lon = tamanho_quadricula / (111000 * np.cos(np.radians(lat)))
-        for col_index, lon in enumerate(lon_range[:-1]):
-            coluna_label = gerar_rotulo_coluna(col_index)
-            etiqueta = f"{coluna_label}{row_index + 1}"
-            etiquetas.append(((lat - delta_lat / 2, lon + delta_lon / 2), etiqueta))
+        if lon_range.size > 0: # Check if lon_range has any elements
+            delta_lon = tamanho_quadricula / (111000 * np.cos(np.radians(lat)))
+            for col_index, lon in enumerate(lon_range[:-1]):
+                coluna_label = gerar_rotulo_coluna(col_index)
+                etiqueta = f"{coluna_label}{row_index + 1}"
+                etiquetas.append(((lat - delta_lat / 2, lon + delta_lon / 2), etiqueta))
 
     return linhas, etiquetas, perimetro
 
