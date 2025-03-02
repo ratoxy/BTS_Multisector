@@ -114,7 +114,20 @@ def main():
             mapa.fit_bounds(area_coberta.bounds)
 
     folium.LayerControl().add_to(mapa)
-    folium_static(mapa, width=800, height=600)
+    
+    st.markdown(
+        """
+        <style>
+            iframe {
+                width: 100% !important;
+                height: calc(100vh - 20px) !important;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    folium_static(mapa)
 
 if __name__ == "__main__":
     main()
