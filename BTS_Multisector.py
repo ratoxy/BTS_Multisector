@@ -128,7 +128,7 @@ def main():
         lons = [lon for _, lon, _, _ in celulas]
         mapa.fit_bounds([[min(lats), min(lons)], [max(lats), max(lons)]])
 
-    folium.LayerControl().add_to(mapa) # Correção aqui!
+    folium.LayerControl().add_to(mapa)
 
     st.markdown(
         """
@@ -139,3 +139,7 @@ def main():
             }
         </style>
         """,
+        unsafe_allow_html=True
+    )
+
+    folium_
