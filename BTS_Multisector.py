@@ -12,7 +12,7 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
         dlat = (alcance / 111) * np.cos(angulo_rad)
         dlon = (alcance / (111 * np.cos(np.radians(lat)))) * np.sin(angulo_rad)
         pontos.append((lat + dlat, lon + dlon))
-    pontos.append((lat, lon))  # Fechar a célula
+    pontos.append((lat, lon))
     return pontos
 
 def gerar_rotulo_coluna(indice):
@@ -28,24 +28,28 @@ def gerar_grelha(area_coberta, tamanho_quadricula):
     linhas = []
     etiquetas = []
     
-    delta_lat = tamanho_quadricula / 111000  # Conversão de metros para graus de latitude
-    delta_lon = lambda lat: tamanho_quadricula / (111000 * np.cos(np.radians(lat)))  # Ajuste da longitude
+    delta_lat = tamanho_quadricula / 111000
     
     lat_range = np.arange(max_lat, min_lat, -delta_lat)
-    lon_range = np.arange(min_lon, max_lon, delta_lon((max_lat + min_lat) / 2))
-
+    lon_range = []
+    
+    for lat in lat_range:
+        delta_lon = tamanho_quadricula / (111000 * np.cos(np.radians(lat)))
+        if not lon_range:
+            lon_range = np.arange(min_lon, max_lon, delta_lon)
+        linhas.append([(lat, min_lon), (lat, max_lon)])
+    
     for lon in lon_range:
         linhas.append([(min_lat, lon), (max_lat, lon)])
-    for lat in lat_range:
-        linhas.append([(lat, min_lon), (lat, max_lon)])
 
     perimetro = [(min_lat, min_lon), (min_lat, max_lon), (max_lat, max_lon), (max_lat, min_lon), (min_lat, min_lon)]
 
     for row_index, lat in enumerate(lat_range[:-1]):
+        delta_lon = tamanho_quadricula / (111000 * np.cos(np.radians(lat)))
         for col_index, lon in enumerate(lon_range[:-1]):
             coluna_label = gerar_rotulo_coluna(col_index)
             etiqueta = f"{coluna_label}{row_index + 1}"
-            etiquetas.append(((lat - delta_lat / 2, lon + delta_lon(lat) / 2), etiqueta))
+            etiquetas.append(((lat - delta_lat / 2, lon + delta_lon / 2), etiqueta))
 
     return linhas, etiquetas, perimetro
 
@@ -95,7 +99,6 @@ def main():
         "Terreno": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
     }
 
-    # Recriar o mapa a cada alteração
     mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo], attr="Esri WorldTopoMap")
 
     for lat, lon, azimute, cor in celulas:
@@ -111,4 +114,28 @@ def main():
             folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: {cor_grelha};">{label}</div>')).add_to(mapa)
         folium.PolyLine(perimetro, color=cor_grelha, weight=4, opacity=1).add_to(mapa)
 
-    # Centralização do mapa atualizada
+    if area_coberta:
+        mapa.fit_bounds(area_coberta.bounds)
+    elif celulas:
+        lats = [lat for lat, _, _, _ in celulas]
+        lons = [lon for _, lon, _, _ in celulas]
+        mapa.fit_bounds([[min(lats), min(lons)], [max(lats), max(lons)]])
+
+    folium.LayerControl().add_to(mapa)
+
+    st.markdown(
+        """
+        <style>
+            iframe {
+                width: 100% !important;
+                height: calc(100vh - 20px) !important;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    folium_static(mapa)
+
+if __name__ == "__main__":
+    main()
