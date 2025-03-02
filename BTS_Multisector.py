@@ -111,28 +111,4 @@ def main():
             folium.Marker(pos, icon=folium.DivIcon(html=f'<div style="font-size: 8pt; color: {cor_grelha};">{label}</div>')).add_to(mapa)
         folium.PolyLine(perimetro, color=cor_grelha, weight=4, opacity=1).add_to(mapa)
 
-    if area_coberta:
-        mapa.fit_bounds(area_coberta.bounds)
-    elif celulas:  # Centralizar nas coordenadas das células se não houver área coberta
-        lats = [lat for lat, _, _, _ in celulas]
-        lons = [lon for _, lon, _, _ in celulas]
-        mapa.fit_bounds([[min(lats), min(lons)], [max(lats), max(lons)]])
-
-    folium.LayerControl().add_to(mapa)
-
-    st.markdown(
-        """
-        <style>
-            iframe {
-                width: 100% !important;
-                height: calc(100vh - 20px) !important;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    folium_static(mapa)
-
-if __name__ == "__main__":
-    main()
+    # Centralização do mapa atualizada
