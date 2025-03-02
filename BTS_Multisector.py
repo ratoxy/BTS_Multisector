@@ -85,12 +85,9 @@ def main():
                 poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
                 area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
 
-    tiles_dict = {"Padrão": "CartoDB positron", "Satélite": "Esri WorldImagery", "OpenStreetMap": "OpenStreetMap"}
+    tiles_dict = {"Padrão": "CartoDB positron", "Satélite": "Esri WorldImagery", "OpenStreetMap": "OpenStreetMap", "Terreno": "Stamen Terrain"}
     
     mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict.get(mapa_tipo, "OpenStreetMap"))
-    
-    if mapa_tipo == "Terreno":
-        folium.TileLayer("USGS USImageryTopo", attr="USGS Topographic Imagery").add_to(mapa)
     
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
@@ -127,4 +124,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
