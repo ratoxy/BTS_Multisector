@@ -29,27 +29,23 @@ def gerar_grelha(area_coberta, tamanho_quadricula):
     etiquetas = []
     
     delta_lat = tamanho_quadricula / 111000  # Conversão de metros para graus de latitude
+    delta_lon = lambda lat: tamanho_quadricula / (111000 * np.cos(np.radians(lat)))  # Ajuste da longitude
     
     lat_range = np.arange(max_lat, min_lat, -delta_lat)
-    lon_range = []
-    
-    for lat in lat_range:
-        delta_lon = tamanho_quadricula / (111000 * np.cos(np.radians(lat)))  # Ajuste da longitude para cada linha
-        if not lon_range:
-            lon_range = np.arange(min_lon, max_lon, delta_lon)
-        linhas.append([(lat, min_lon), (lat, max_lon)])  # Linhas de latitude
-    
+    lon_range = np.arange(min_lon, max_lon, delta_lon((max_lat + min_lat) / 2))
+
     for lon in lon_range:
-        linhas.append([(min_lat, lon), (max_lat, lon)])  # Linhas de longitude
+        linhas.append([(min_lat, lon), (max_lat, lon)])
+    for lat in lat_range:
+        linhas.append([(lat, min_lon), (lat, max_lon)])
 
     perimetro = [(min_lat, min_lon), (min_lat, max_lon), (max_lat, max_lon), (max_lat, min_lon), (min_lat, min_lon)]
 
     for row_index, lat in enumerate(lat_range[:-1]):
-        delta_lon = tamanho_quadricula / (111000 * np.cos(np.radians(lat)))
         for col_index, lon in enumerate(lon_range[:-1]):
             coluna_label = gerar_rotulo_coluna(col_index)
             etiqueta = f"{coluna_label}{row_index + 1}"
-            etiquetas.append(((lat - delta_lat / 2, lon + delta_lon / 2), etiqueta))
+            etiquetas.append(((lat - delta_lat / 2, lon + delta_lon(lat) / 2), etiqueta))
 
     return linhas, etiquetas, perimetro
 
@@ -71,9 +67,6 @@ def main():
         mostrar_grelha = st.toggle("Mostrar Grelha")
         tamanho_quadricula = st.slider("Tamanho da Quadricula (m)", 200, 1000, tamanho_quadricula_default, step=50)
         cor_grelha = st.color_picker("Cor da Grelha e Rótulos", "#FFA500")
-        mostrar_bts = st.checkbox("Mostrar Marcadores BTS", value=True)  # Adicionado checkbox para BTS
-        if st.button("Centralizar Mapa"): # Adicionado botão para centralizar mapa
-            mapa.fit_bounds([[min(lat_default, lat_default), min(lon_default, lon_default)], [max(lat_default, lat_default), max(lon_default, lon_default)]])
     
     with st.sidebar.expander("Configuração das Células", expanded=True):
         alcance = st.slider("Alcance Geral (km)", 1, 20, alcance_default)
@@ -105,8 +98,7 @@ def main():
     mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo], attr="Esri WorldTopoMap")
     
     for lat, lon, azimute, cor in celulas:
-        if mostrar_bts: # Adicionado condição para mostrar/ocultar marcadores BTS
-            folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
+        folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
         celula_coords = gerar_celula(lat, lon, azimute, alcance)
         folium.Polygon(locations=celula_coords, color=cor, fill=True, fill_color=cor, fill_opacity=0.3).add_to(mapa)
 
@@ -135,4 +127,7 @@ def main():
         unsafe_allow_html=True
     )
     
-    folium
+    folium_static(mapa)
+
+if __name__ == "__main__":
+    main()
