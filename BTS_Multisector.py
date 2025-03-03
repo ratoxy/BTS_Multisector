@@ -59,6 +59,38 @@ def gerar_grelha(area_coberta, tamanho_quadricula):
 
     return linhas, etiquetas, perimetro
 
+def gerar_kml(celulas, grelha, etiquetas, perimetro):
+    kml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    kml += '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
+    kml += '<Document>\n'
+
+    # Células
+    for lat, lon, azimute, cor in celulas:
+        celula_coords = gerar_celula(lat, lon, azimute, alcance)
+        kml += f'<Placemark><name>Célula {lat}, {lon}</name><Polygon><outerBoundaryIs><LinearRing><coordinates>'
+        for lat, lon in celula_coords:
+            kml += f'{lon},{lat},0 '
+        kml += '</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>\n'
+
+    # Grelha
+    if grelha:
+        for linha in grelha:
+            kml += f'<Placemark><name>Linha Grelha</name><LineString><coordinates>'
+            for lat, lon in linha:
+                kml += f'{lon},{lat},0 '
+            kml += '</coordinates></LineString></Placemark>\n'
+
+        for (lat, lon), label in etiquetas:
+            kml += f'<Placemark><name>Etiqueta Grelha {label}</name><Point><coordinates>{lon},{lat},0</coordinates></Point></Placemark>\n'
+
+        kml += f'<Placemark><name>Perímetro Grelha</name><LineString><coordinates>'
+        for lat, lon in perimetro:
+            kml += f'{lon},{lat},0 '
+        kml += '</coordinates></LineString></Placemark>\n'
+
+    kml += '</Document>\n</kml>'
+    return kml
+
 def main():
     st.set_page_config(layout="wide")
     st.sidebar.title("_Multi Cell View_")
@@ -110,7 +142,8 @@ def main():
 
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
-        celula_coords = gerar_celula(lat, lon, azimute, alcance)
+        celula_coords = gerar_celula(lat, lon
+        , azimute, alcance)
         folium.Polygon(locations=celula_coords, color=cor, fill=True, fill_color=cor, fill_opacity=0.3).add_to(mapa)
 
     # Centraliza o mapa na área da grade (mesmo se a grade não estiver ativa)
@@ -145,6 +178,22 @@ def main():
     )
 
     folium_static(mapa)
+
+    # Botão de Exportação KML
+    if st.button("Exportar para KML"):
+        if celulas:
+            if mostrar_grelha and area_coberta is not None:
+                grelha, etiquetas, perimetro = gerar_grelha(area_coberta, tamanho_quadricula)
+            else:
+                grelha, etiquetas, perimetro = [], [], []
+
+            kml_data = gerar_kml(celulas, grelha, etiquetas, perimetro)
+            st.download_button(
+                label="Download KML",
+                data=kml_data,
+                file_name="celulas_grelha.kml",
+                mime="application/vnd.google-earth.kml+xml"
+            )
 
 if __name__ == "__main__":
     main()
