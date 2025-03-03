@@ -72,13 +72,13 @@ def gerar_kml(celulas, grelha, etiquetas, perimetro, alcance, cor_grelha):
         for lat, lon in celula_coords:
             kml += f'{lon},{lat},0 '
         kml += '</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>\n'
-        kml += f'<Style id="{cor}"><PolyStyle><color>7f{cor[5:7]}{cor[3:5]}{cor[1:3]}</color></PolyStyle></Style>\n' # Adiciona estilo para a cor
+        kml += f'<Style id="{cor}"><PolyStyle><color>7f{cor[5:7]}{cor[3:5]}{cor[1:3]}</color><fill>1</fill><outline>1</outline></PolyStyle></Style>\n' # Adiciona estilo para a cor com opacidade de 50%
     kml += '</Folder>\n'
 
     # Pasta Grelha
     kml += '<Folder><name>Grelha</name>\n'
     if grelha:
-        kml += f'<Style id="grelha_style"><LineStyle><color>7f{cor_grelha[5:7]}{cor_grelha[3:5]}{cor_grelha[1:3]}</color></LineStyle></Style>\n'
+        kml += f'<Style id="grelha_style"><LineStyle><color>7f{cor_grelha[5:7]}{cor_grelha[3:5]}{cor_grelha[1:3]}</color></LineStyle><IconStyle><scale>0.5</scale></IconStyle></Style>\n'
         for linha in grelha:
             kml += f'<Placemark><name>Linha Grelha</name><styleUrl>#grelha_style</styleUrl><LineString><coordinates>'
             for lat, lon in linha:
