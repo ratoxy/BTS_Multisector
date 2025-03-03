@@ -78,7 +78,7 @@ def gerar_kml(celulas, grelha, etiquetas, perimetro, alcance, cor_grelha):
     # Pasta Grelha
     kml += '<Folder><name>Grelha</name>\n'
     if grelha:
-        kml += f'<Style id="grelha_style"><LineStyle><color>7f{cor_grelha[5:7]}{cor_grelha[3:5]}{cor_grelha[1:3]}</color></LineStyle><IconStyle><scale>0.5</scale></IconStyle></Style>\n'
+        kml += f'<Style id="grelha_style"><LineStyle><color>7f{cor_grelha[5:7]}{cor_grelha[3:5]}{cor_grelha[1:3]}</color></LineStyle><IconStyle><scale>0.1</scale></IconStyle></Style>\n'
         for linha in grelha:
             kml += f'<Placemark><name>Linha Grelha</name><styleUrl>#grelha_style</styleUrl><LineString><coordinates>'
             for lat, lon in linha:
