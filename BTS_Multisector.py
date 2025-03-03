@@ -59,7 +59,7 @@ def gerar_grelha(area_coberta, tamanho_quadricula):
 
     return linhas, etiquetas, perimetro
 
-def gerar_kml(celulas, grelha, etiquetas, perimetro):
+def gerar_kml(celulas, grelha, etiquetas, perimetro, alcance): #Alcance adicionado aqui
     kml = '<?xml version="1.0" encoding="UTF-8"?>\n'
     kml += '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
     kml += '<Document>\n'
@@ -138,12 +138,12 @@ def main():
     }
 
     # Recria o mapa a cada alteração
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo], attr="Esri WorldTopoMap")
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=
+    tiles_dict[mapa_tipo], attr="Esri WorldTopoMap")
 
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
-        celula_coords = gerar_celula(lat, lon
-        , azimute, alcance)
+        celula_coords = gerar_celula(lat, lon, azimute, alcance)
         folium.Polygon(locations=celula_coords, color=cor, fill=True, fill_color=cor, fill_opacity=0.3).add_to(mapa)
 
     # Centraliza o mapa na área da grade (mesmo se a grade não estiver ativa)
@@ -187,7 +187,7 @@ def main():
             else:
                 grelha, etiquetas, perimetro = [], [], []
 
-            kml_data = gerar_kml(celulas, grelha, etiquetas, perimetro)
+            kml_data = gerar_kml(celulas, grelha, etiquetas, perimetro, alcance) #Alcance adicionado aqui
             st.download_button(
                 label="Download KML",
                 data=kml_data,
