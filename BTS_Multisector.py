@@ -17,12 +17,11 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
 
 def gerar_rotulo_coluna(indice):
     letras = string.ascii_uppercase
-    if indice < 26:
-        return letras[indice]
-    else:
-        primeiro = letras[(indice // 26) - 1]
-        segundo = letras[indice % 26]
-        return primeiro + segundo
+    rotulo = ""
+    while indice >= 0:
+        rotulo = letras[indice % 26] + rotulo
+        indice = (indice // 26) - 1
+    return rotulo
 
 def gerar_grelha(area_coberta, tamanho_quadricula):
     if area_coberta is None:
@@ -58,44 +57,6 @@ def gerar_grelha(area_coberta, tamanho_quadricula):
                 etiquetas.append(((lat - delta_lat / 2, lon + delta_lon / 2), etiqueta))
 
     return linhas, etiquetas, perimetro
-
-def gerar_kml(celulas, grelha, etiquetas, perimetro, alcance, cor_grelha):
-    kml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-    kml += '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
-    kml += '<Document>\n'
-
-    # Pasta Células
-    kml += '<Folder><name>Células</name>\n'
-    for lat, lon, azimute, cor in celulas:
-        celula_coords = gerar_celula(lat, lon, azimute, alcance)
-        kml += f'<Placemark><name>Célula {lat}, {lon}</name><styleUrl>#{cor}</styleUrl><Polygon><outerBoundaryIs><LinearRing><coordinates>'
-        for lat, lon in celula_coords:
-            kml += f'{lon},{lat},0 '
-        kml += '</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>\n'
-        kml += f'<Style id="{cor}"><PolyStyle><color>7f{cor[5:7]}{cor[3:5]}{cor[1:3]}</color><fill>1</fill><outline>1</outline></PolyStyle></Style>\n' # Adiciona estilo para a cor com opacidade de 50%
-    kml += '</Folder>\n'
-
-    # Pasta Grelha
-    kml += '<Folder><name>Grelha</name>\n'
-    if grelha:
-        kml += f'<Style id="grelha_style"><LineStyle><color>7f{cor_grelha[5:7]}{cor_grelha[3:5]}{cor_grelha[1:3]}</color></LineStyle><IconStyle><scale>0.1</scale></IconStyle></Style>\n'
-        for linha in grelha:
-            kml += f'<Placemark><name>Linha Grelha</name><styleUrl>#grelha_style</styleUrl><LineString><coordinates>'
-            for lat, lon in linha:
-                kml += f'{lon},{lat},0 '
-            kml += '</coordinates></LineString></Placemark>\n'
-
-        for (lat, lon), label in etiquetas:
-            kml += f'<Placemark><name>{label}</name><styleUrl>#grelha_style</styleUrl><Point><coordinates>{lon},{lat},0</coordinates></Point></Placemark>\n' # Remove "Etiqueta Grelha"
-
-        kml += f'<Placemark><name>Perímetro Grelha</name><styleUrl>#grelha_style</styleUrl><LineString><coordinates>'
-        for lat, lon in perimetro:
-            kml += f'{lon},{lat},0 '
-        kml += '</coordinates></LineString></Placemark>\n'
-    kml += '</Folder>\n'
-
-    kml += '</Document>\n</kml>'
-    return kml
 
 def main():
     st.set_page_config(layout="wide")
@@ -183,23 +144,6 @@ def main():
     )
 
     folium_static(mapa)
-
-    # Botão de Exportação KML no final da barra lateral
-    with st.sidebar:
-        if st.button("Exportar para KML"):
-            if celulas:
-                if mostrar_grelha and area_coberta is not None:
-                    grelha, etiquetas, perimetro = gerar_grelha(area_coberta, tamanho_quadricula)
-                else:
-                    grelha, etiquetas, perimetro = [], [], []
-
-                kml_data = gerar_kml(celulas, grelha, etiquetas, perimetro, alcance, cor_grelha)
-                st.download_button(
-                    label="Download KML",
-                    data=kml_data,
-                    file_name="celulas_grelha.kml",
-                    mime="application/vnd.google-earth.kml+xml"
-                )
 
 if __name__ == "__main__":
     main()
