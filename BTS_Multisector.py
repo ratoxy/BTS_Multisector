@@ -59,20 +59,24 @@ def gerar_grelha(area_coberta, tamanho_quadricula):
 
     return linhas, etiquetas, perimetro
 
-def gerar_kml(celulas, grelha, etiquetas, perimetro, alcance): #Alcance adicionado aqui
+def gerar_kml(celulas, grelha, etiquetas, perimetro, alcance):
     kml = '<?xml version="1.0" encoding="UTF-8"?>\n'
     kml += '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
     kml += '<Document>\n'
 
-    # Células
+    # Pasta Células
+    kml += '<Folder><name>Células</name>\n'
     for lat, lon, azimute, cor in celulas:
         celula_coords = gerar_celula(lat, lon, azimute, alcance)
-        kml += f'<Placemark><name>Célula {lat}, {lon}</name><Polygon><outerBoundaryIs><LinearRing><coordinates>'
+        kml += f'<Placemark><name>Célula {lat}, {lon}</name><styleUrl>#{cor}</styleUrl><Polygon><outerBoundaryIs><LinearRing><coordinates>'
         for lat, lon in celula_coords:
             kml += f'{lon},{lat},0 '
         kml += '</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>\n'
+        kml += f'<Style id="{cor}"><PolyStyle><color>7f{cor[5:7]}{cor[3:5]}{cor[1:3]}</color></PolyStyle></Style>\n' # Adiciona estilo para a cor
+    kml += '</Folder>\n'
 
-    # Grelha
+    # Pasta Grelha
+    kml += '<Folder><name>Grelha</name>\n'
     if grelha:
         for linha in grelha:
             kml += f'<Placemark><name>Linha Grelha</name><LineString><coordinates>'
@@ -81,12 +85,13 @@ def gerar_kml(celulas, grelha, etiquetas, perimetro, alcance): #Alcance adiciona
             kml += '</coordinates></LineString></Placemark>\n'
 
         for (lat, lon), label in etiquetas:
-            kml += f'<Placemark><name>Etiqueta Grelha {label}</name><Point><coordinates>{lon},{lat},0</coordinates></Point></Placemark>\n'
+            kml += f'<Placemark><name>{label}</name><Point><coordinates>{lon},{lat},0</coordinates></Point></Placemark>\n' # Remove "Etiqueta Grelha"
 
         kml += f'<Placemark><name>Perímetro Grelha</name><LineString><coordinates>'
         for lat, lon in perimetro:
             kml += f'{lon},{lat},0 '
         kml += '</coordinates></LineString></Placemark>\n'
+    kml += '</Folder>\n'
 
     kml += '</Document>\n</kml>'
     return kml
@@ -138,8 +143,7 @@ def main():
     }
 
     # Recria o mapa a cada alteração
-    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=
-    tiles_dict[mapa_tipo], attr="Esri WorldTopoMap")
+    mapa = folium.Map(location=[lat_default, lon_default], zoom_start=13, tiles=tiles_dict[mapa_tipo], attr="Esri WorldTopoMap")
 
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
@@ -187,7 +191,7 @@ def main():
             else:
                 grelha, etiquetas, perimetro = [], [], []
 
-            kml_data = gerar_kml(celulas, grelha, etiquetas, perimetro, alcance) #Alcance adicionado aqui
+            kml_data = gerar_kml(celulas, grelha, etiquetas, perimetro, alcance)
             st.download_button(
                 label="Download KML",
                 data=kml_data,
