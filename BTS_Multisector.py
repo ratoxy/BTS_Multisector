@@ -17,11 +17,12 @@ def gerar_celula(lat, lon, azimute, alcance, abertura=120):
 
 def gerar_rotulo_coluna(indice):
     letras = string.ascii_uppercase
-    rotulo = ""
-    while indice >= 0:
-        rotulo = letras[indice % 26] + rotulo
-        indice = (indice // 26) - 1
-    return rotulo
+    if indice < 26:
+        return letras[indice]
+    else:
+        primeiro = letras[(indice // 26) - 1]
+        segundo = letras[indice % 26]
+        return primeiro + segundo
 
 def gerar_grelha(area_coberta, tamanho_quadricula):
     if area_coberta is None:
