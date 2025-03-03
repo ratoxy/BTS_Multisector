@@ -59,7 +59,7 @@ def gerar_grelha(area_coberta, tamanho_quadricula):
 
     return linhas, etiquetas, perimetro
 
-def gerar_kml(celulas, grelha, etiquetas, perimetro, alcance):
+def gerar_kml(celulas, grelha, etiquetas, perimetro, alcance, cor_grelha):
     kml = '<?xml version="1.0" encoding="UTF-8"?>\n'
     kml += '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
     kml += '<Document>\n'
@@ -78,16 +78,17 @@ def gerar_kml(celulas, grelha, etiquetas, perimetro, alcance):
     # Pasta Grelha
     kml += '<Folder><name>Grelha</name>\n'
     if grelha:
+        kml += f'<Style id="grelha_style"><LineStyle><color>7f{cor_grelha[5:7]}{cor_grelha[3:5]}{cor_grelha[1:3]}</color></LineStyle></Style>\n'
         for linha in grelha:
-            kml += f'<Placemark><name>Linha Grelha</name><LineString><coordinates>'
+            kml += f'<Placemark><name>Linha Grelha</name><styleUrl>#grelha_style</styleUrl><LineString><coordinates>'
             for lat, lon in linha:
                 kml += f'{lon},{lat},0 '
             kml += '</coordinates></LineString></Placemark>\n'
 
         for (lat, lon), label in etiquetas:
-            kml += f'<Placemark><name>{label}</name><Point><coordinates>{lon},{lat},0</coordinates></Point></Placemark>\n' # Remove "Etiqueta Grelha"
+            kml += f'<Placemark><name>{label}</name><styleUrl>#grelha_style</styleUrl><Point><coordinates>{lon},{lat},0</coordinates></Point></Placemark>\n' # Remove "Etiqueta Grelha"
 
-        kml += f'<Placemark><name>Perímetro Grelha</name><LineString><coordinates>'
+        kml += f'<Placemark><name>Perímetro Grelha</name><styleUrl>#grelha_style</styleUrl><LineString><coordinates>'
         for lat, lon in perimetro:
             kml += f'{lon},{lat},0 '
         kml += '</coordinates></LineString></Placemark>\n'
@@ -183,21 +184,22 @@ def main():
 
     folium_static(mapa)
 
-    # Botão de Exportação KML
-    if st.button("Exportar para KML"):
-        if celulas:
-            if mostrar_grelha and area_coberta is not None:
-                grelha, etiquetas, perimetro = gerar_grelha(area_coberta, tamanho_quadricula)
-            else:
-                grelha, etiquetas, perimetro = [], [], []
+    # Botão de Exportação KML no final da barra lateral
+    with st.sidebar:
+        if st.button("Exportar para KML"):
+            if celulas:
+                if mostrar_grelha and area_coberta is not None:
+                    grelha, etiquetas, perimetro = gerar_grelha(area_coberta, tamanho_quadricula)
+                else:
+                    grelha, etiquetas, perimetro = [], [], []
 
-            kml_data = gerar_kml(celulas, grelha, etiquetas, perimetro, alcance)
-            st.download_button(
-                label="Download KML",
-                data=kml_data,
-                file_name="celulas_grelha.kml",
-                mime="application/vnd.google-earth.kml+xml"
-            )
+                kml_data = gerar_kml(celulas, grelha, etiquetas, perimetro, alcance, cor_grelha)
+                st.download_button(
+                    label="Download KML",
+                    data=kml_data,
+                    file_name="celulas_grelha.kml",
+                    mime="application/vnd.google-earth.kml+xml"
+                )
 
 if __name__ == "__main__":
     main()
