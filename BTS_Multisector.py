@@ -5,7 +5,7 @@ from shapely.geometry import Polygon, MultiPolygon
 import string
 from streamlit_folium import folium_static
 
-def gerar_celula(lat, lon, azimute, alcance, abertura=120):
+def gerar_celula(lat, lon, azimute, alcance, abertura):
     pontos = []
     for angulo in np.linspace(azimute - abertura / 2, azimute + abertura / 2, num=30):
         angulo_rad = np.radians(angulo)
@@ -108,6 +108,7 @@ def main():
     lon_default = -8.6807
     azimute_default = 40
     alcance_default = 3
+    abertura_default = 120
     tamanho_quadricula_default = 500
 
     with st.sidebar.expander("Configuração Geral", expanded=True):
@@ -118,6 +119,7 @@ def main():
     
     with st.sidebar.expander("Configuração das Células", expanded=True):
         alcance = st.slider("Alcance Geral (km)", 1, 20, alcance_default)
+        abertura = st.slider("Abertura (graus)", 1, 360, abertura_default)
     
     celulas = []
     area_coberta = None
@@ -133,7 +135,7 @@ def main():
                     lon = st.number_input(f"Lon {i+1}", value=lon_default, format="%.6f", key=f"lon_{i}")
                 azimute = st.slider(f"Azimute {i+1}", 0, 360, azimute_default + i * 120, key=f"azimute_{i}")
                 celulas.append((lat, lon, azimute, cores[i]))
-                poligono = Polygon(gerar_celula(lat, lon, azimute, alcance))
+                poligono = Polygon(gerar_celula(lat, lon, azimute, alcance, abertura))
                 area_coberta = poligono if area_coberta is None else area_coberta.union(poligono)
 
     tiles_dict = {
@@ -148,7 +150,7 @@ def main():
 
     for lat, lon, azimute, cor in celulas:
         folium.Marker([lat, lon], tooltip=f"BTS {lat}, {lon}").add_to(mapa)
-        celula_coords = gerar_celula(lat, lon, azimute, alcance)
+        celula_coords = gerar_celula(lat, lon, azimute, alcance, abertura)
         folium.Polygon(locations=celula_coords, color=cor, fill=True, fill_color=cor, fill_opacity=0.3).add_to(mapa)
 
     # Centraliza o mapa na área da grade (mesmo se a grade não estiver ativa)
